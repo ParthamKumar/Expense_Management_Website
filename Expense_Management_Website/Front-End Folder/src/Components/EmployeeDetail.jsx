@@ -26,7 +26,7 @@ const EmployeeDetail = () => {
   return (
     <div>
         <div className="p-2 d-flex justify-content-center shadow">
-            <h4>Emoployee Management System</h4>
+            <h4>CB</h4>
         </div>
         <div className='d-flex justify-content-center flex-column align-items-center mt-3'>
             <img src={`http://localhost:3000/Images/`+employee.image} className='emp_det_image'/>

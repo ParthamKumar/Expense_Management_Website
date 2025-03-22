@@ -1,0 +1,54 @@
+.accounts-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.add-client-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.add-client-btn:hover {
+    background-color: #0056b3;
+}
+
+.clients-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.client-card {
+    background-color: #ffffff;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.client-card:hover {
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.client-card h5 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.client-card p {
+    margin: 5px 0 0;
+    font-size: 14px;
+    color: #555;
+}

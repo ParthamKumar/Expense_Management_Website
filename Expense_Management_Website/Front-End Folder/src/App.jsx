@@ -14,6 +14,11 @@ import Start from './Components/Start'
 import EmployeeLogin from './Components/EmployeeLogin'
 import EmployeeDetail from './Components/EmployeeDetail'
 import PrivateRoute from './Components/PrivateRoute'
+import Accounts from './Components/Accounts/Accounts'
+import AddAccount from './Components/Accounts/AddAccount'
+import AccountDetails from './Components/Accounts/AccountDetails'
+import Transactions from './Components/Transactions/Transactions'
+import AddTransaction from './Components/Transactions/AddTransaction'
 
 function App() {
   return (
@@ -30,6 +35,17 @@ function App() {
       }>
         <Route path='' element={<Home />}></Route>
         <Route path='/dashboard/employee' element={<Employee />}></Route>
+        <Route path='/dashboard/accounts' element={<Accounts />}></Route>
+        <Route path='/dashboard/accounts' element={<Accounts />}></Route>
+        <Route path='/dashboard/accounts/addAccount' element={<AddAccount />}></Route>
+        <Route path='/dashboard/accounts/details/:id' element={<AccountDetails />}></Route>
+        <Route path='/dashboard/transactions' element={<Transactions />}></Route>
+        <Route path='/dashboard/transactions/addTransaction' element={<AddTransaction />}></Route>
+
+
+
+
+
         <Route path='/dashboard/category' element={<Category />}></Route>
         <Route path='/dashboard/profile' element={<Profile />}></Route>
         <Route path='/dashboard/add_category' element={<AddCategory />}></Route>
