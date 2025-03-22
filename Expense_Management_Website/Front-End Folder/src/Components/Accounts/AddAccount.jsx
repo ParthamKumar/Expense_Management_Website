@@ -8,8 +8,11 @@ const AddAccount = () => {
         contact: '',
         email: '',
         address: '',
-        description: ''  // Add description field to state
+        description: '',
+        dateAdded: ''
     });
+
+    const [error, setError] = useState(''); // For showing error if validation fails
     const navigate = useNavigate();
 
     const handleInputChange = (e) => {
@@ -17,16 +20,40 @@ const AddAccount = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleAddClient = () => {
-        // API call to add a client can be added here
-        console.log('Client Added', formData);
-        navigate('/accounts'); // Navigate back to accounts page after adding client
+    const handleAddClient = async () => {
+        if (!formData.name) {
+            setError('Name is required');
+            return; // Stop if validation fails
+        }
+    
+        try {
+            const response = await fetch('http://localhost:3000/accounts/addClient', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+    
+            const data = await response.json();
+            if (response.ok) {
+                console.log('Client added successfully:', data);
+                navigate('/dashboard/accounts');
+            } else {
+                setError(data.message || 'Failed to add client');
+            }
+        } catch (error) {
+            setError('An error occurred. Please try again.');
+            console.error('Error:', error);
+        }
     };
+
 
     return (
         <div className="add-account-container">
             <h2>Add New Client</h2>
             <form className="add-account-form">
+                {error && <p className="error">{error}</p>} {/* Show error if validation fails */}
                 <label>
                     Name:
                     <input 
@@ -76,10 +103,20 @@ const AddAccount = () => {
                         required 
                     />
                 </label>
+                <label>
+                    Date Account Added:
+                    <input 
+                        type="date" 
+                        name="dateAdded" 
+                        value={formData.dateAdded}
+                        onChange={handleInputChange} 
+                        required 
+                    />
+                </label>
                 <button type="button" className="btn btn-primary" onClick={handleAddClient}>Add Client</button>
             </form>
         </div>
     );
-}
+};
 
 export default AddAccount;

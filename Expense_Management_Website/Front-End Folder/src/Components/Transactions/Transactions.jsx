@@ -1,31 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Transactions.css'; // Import CSS
+import axios from 'axios';
 
 const Transactions = () => {
-    const conversionRate = 83; // 1 USD = 83 INR (example conversion rate)
     
-    const [transactions, setTransactions] = useState([
-        { id: 1, name: 'Client One', date: '2025-03-21', description: 'Payment for services', credit: 1000, debit: 0, account: 'Account A' },
-        { id: 2, name: 'Client Two', date: '2025-03-22', description: 'Refund issued', credit: 0, debit: 500, account: 'Account B' },
-        { id: 3, name: 'Client Three', date: '2025-03-22', description: 'Subscription renewal', credit: 300, debit: 0, account: 'Account C' },
-    ]);
-
+    const [transactions, setTransactions] = useState([]);
     const navigate = useNavigate();
 
+    // Fetch transactions from the API
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            try {
+                const response = await axios.get('http://localhost:3000/transactions/gettransactions');
+                setTransactions(response.data);
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+            }
+        };
+        fetchTransactions();
+    }, []);
+
     const handleTransactionClick = (id) => {
-        navigate(`/dashboard/transactions/details/${id}`); // Navigate to TransactionDetails component with transaction id
+        navigate(`/dashboard/transactions/details/${id}`);
     };
 
     const handleAddTransaction = () => {
-        navigate('/dashboard/transactions/addTransaction'); // Navigate to the form for adding a new transaction
+        navigate('/dashboard/transactions/addTransaction');
     };
 
     // Function to format the date to 'DD MMM YYYY' format
     const formatDate = (dateString) => {
         const options = { day: '2-digit', month: 'short', year: 'numeric' };
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-GB', options); // 'en-GB' gives the 'DD MMM YYYY' format
+        return date.toLocaleDateString('en-GB', options);
     };
 
     return (
@@ -49,12 +57,16 @@ const Transactions = () => {
                 </thead>
                 <tbody>
                     {transactions.map(transaction => (
-                        <tr key={transaction.id} onClick={() => handleTransactionClick(transaction.id)}>
+                        <tr key={transaction.transaction_id} onClick={() => handleTransactionClick(transaction.transaction_id)}>
                             <td>{transaction.name}</td>
                             <td>{formatDate(transaction.date)}</td>
                             <td>{transaction.description}</td>
-                            <td className="credit">{transaction.credit ? `₹${(transaction.credit * conversionRate).toLocaleString()}` : '-'}</td>
-                            <td className="debit">{transaction.debit ? `₹${(transaction.debit * conversionRate).toLocaleString()}` : '-'}</td>
+                            <td className="credit">
+                                {transaction.transaction_type === 'credit' ? `₹${(transaction.amount).toLocaleString()}` : '-'}
+                            </td>
+                            <td className="debit">
+                                {transaction.transaction_type === 'debit' ? `₹${(transaction.amount ).toLocaleString()}` : '-'}
+                            </td>
                             <td>{transaction.account}</td>
                         </tr>
                     ))}
@@ -62,6 +74,6 @@ const Transactions = () => {
             </table>
         </div>
     );
-}
+};
 
 export default Transactions;

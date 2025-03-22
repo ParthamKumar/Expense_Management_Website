@@ -1,28 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
 import './AccountDetails.css'; // Import the CSS file
 
 const AccountDetails = () => {
     const { id } = useParams(); // Get the client id from the URL
     const [client, setClient] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Simulate fetching client data by id
-        const fetchClientDetails = () => {
-            const clients = [
-                { id: 1, name: 'Client One', email: 'client1@example.com', contact: '123-456-7890', address: '123 Street, City' },
-                { id: 2, name: 'Client Two', email: 'client2@example.com', contact: '987-654-3210', address: '456 Avenue, City' },
-                { id: 3, name: 'Client Three', email: 'client3@example.com', contact: '555-555-5555', address: '789 Boulevard, City' }
-            ];
-            const selectedClient = clients.find(client => client.id === parseInt(id));
-            setClient(selectedClient);
+        const fetchClientDetails = async () => {
+            try {
+                const response = await axios.get(`http://localhost:3000/accounts/getClient/${id}`);
+                setClient(response.data);
+                setLoading(false);
+            } catch (err) {
+                setError('Error fetching client details');
+                setLoading(false);
+            }
         };
 
         fetchClientDetails();
     }, [id]);
 
-    if (!client) {
+    if (loading) {
         return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
     }
 
     return (
