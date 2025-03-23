@@ -96,8 +96,13 @@ const AccountDetails = () => {
         // Implement any desired logic when a transaction row is clicked
     };
 
+    // Function to format the date to 'DD MMM YYYY' format
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString();
+        const date = new Date(dateString);
+        const day = date.getDate().toString().padStart(2, '0'); // Ensure 2-digit day
+        const month = date.toLocaleString('default', { month: 'short' }); // Get short month name (e.g., Mar)
+        const year = date.getFullYear(); // Get full year (e.g., 2025)
+        return `${day} ${month} ${year}`; // Format as "23 Mar 2025"
     };
 
     if (loadingClient && loadingTransactions) {

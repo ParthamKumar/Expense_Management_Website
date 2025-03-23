@@ -27,7 +27,7 @@ router.post('/add', (req, res) => {
 });
 
 router.get('/gettransactions', (req, res) => {
-    const query = 'SELECT * FROM transactions';
+    const query = 'SELECT * FROM transactions order by date DESC';
     con.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching transactions:', err);
@@ -59,9 +59,12 @@ router.get('/searchtransactions', (req, res) => {
     }
 
     if (transactionType) {
-        query += ' AND transaction_type = ?';
+        // query += ' AND transaction_type = ?';
         params.push(transactionType);
     }
+
+    // Add ORDER BY clause to sort by date in descending order (newest first)
+    query += ' ORDER BY date DESC';
 
     con.query(query, params, (err, results) => {
         if (err) {

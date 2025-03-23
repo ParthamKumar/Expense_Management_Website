@@ -1,3 +1,4 @@
+/* Transactions.css */
 .transactions-container {
     max-width: 100%;
     margin: 20px auto;
@@ -34,12 +35,11 @@
     background-color: #0056b3;
 }
 
-/* Search Fields */
 .search-fields {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
-    flex-wrap: wrap; /* Allow wrapping for smaller screens */
+    flex-wrap: wrap;
 }
 
 .search-fields input,
@@ -48,8 +48,8 @@
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 14px;
-    flex: 1; /* Allow inputs to grow */
-    min-width: 150px; /* Minimum width for better usability */
+    flex: 1;
+    min-width: 150px;
     transition: border-color 0.3s ease;
 }
 
@@ -64,7 +64,6 @@
     cursor: pointer;
 }
 
-/* Clear Filters Button */
 .btn-clear {
     background-color: #dc3545;
     color: white;
@@ -80,7 +79,6 @@
     background-color: #c82333;
 }
 
-/* Transactions Table */
 .transactions-table {
     width: 100%;
     border-collapse: collapse;
@@ -112,40 +110,39 @@
     cursor: pointer;
 }
 
-/* Adding colors for credit and debit */
 .transactions-table .credit {
-    color: #28a745; /* Green for credit */
+    color: #28a745;
     font-weight: bold;
 }
 
 .transactions-table .debit {
-    color: #dc3545; /* Red for debit */
+    color: #dc3545;
     font-weight: bold;
+}
+
+/* Scrollable Table Body */
+.transactions-table tbody {
+    display: block;
+    max-height: 500px; /* Adjust height to show 5 rows */
+    overflow-y: auto;
+}
+
+.transactions-table thead,
+.transactions-table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
 }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
-    .transactions-container {
-        padding: 15px;
-    }
-
-    .transactions-table th,
-    .transactions-table td {
-        padding: 10px;
-        font-size: 14px;
-    }
-
-    .header h4 {
-        font-size: 20px;
-    }
-
     .search-fields {
-        flex-direction: column; /* Stack search fields vertically on small screens */
+        flex-direction: column;
     }
 
     .search-fields input,
     .search-fields select,
     .btn-clear {
-        width: 100%; /* Full width for inputs and buttons on small screens */
+        width: 100%;
     }
 }

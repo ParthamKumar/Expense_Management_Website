@@ -64,15 +64,12 @@ router.get('/getClientNames', (req, res) => {
 router.get('/getClientTransactions/:id', (req, res) => {
     const clientId = req.params.id;
 
-    con.query('SELECT * FROM transactions WHERE client_id = ?', [clientId], (err, results) => {
+    // Fetch transactions for the client, sorted by date in descending order
+    const query = 'SELECT * FROM transactions WHERE client_id = ? ORDER BY date DESC';
+    con.query(query, [clientId], (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'Database error', error: err });
         }
-
-        if (results.length === 0) {
-            return res.status(404).json({ message: 'No transactions found for this client' });
-        }
-
         res.status(200).json(results);
     });
 });

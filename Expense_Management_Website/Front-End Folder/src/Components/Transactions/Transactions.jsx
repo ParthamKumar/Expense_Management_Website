@@ -29,24 +29,41 @@ const Transactions = () => {
 
     // Handle search by name, date range, description, or transaction type
     useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const response = await axios.get('http://localhost:3000/transactions/searchtransactions', {
-                    params: {
-                        name: searchTerm,
-                        startDate: startDate,
-                        endDate: endDate,
-                        description: description,
-                        transactionType: transactionType
-                    }
-                });
-                setFilteredTransactions(response.data);
-            } catch (error) {
-                console.error('Error fetching transactions:', error);
-            }
-        };
-        fetchTransactions();
-    }, [searchTerm, startDate, endDate, description, transactionType]);
+        let filtered = transactions;
+
+        // Filter by name
+        if (searchTerm) {
+            filtered = filtered.filter(transaction =>
+                transaction.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        // Filter by date range
+        if (startDate && endDate) {
+            filtered = filtered.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                return transactionDate >= start && transactionDate <= end;
+            });
+        }
+
+        // Filter by description
+        if (description) {
+            filtered = filtered.filter(transaction =>
+                transaction.description.toLowerCase().includes(description.toLowerCase())
+            );
+        }
+
+        // Filter by transaction type
+        if (transactionType) {
+            filtered = filtered.filter(transaction =>
+                transaction.transaction_type === transactionType
+            );
+        }
+
+        setFilteredTransactions(filtered);
+    }, [searchTerm, startDate, endDate, description, transactionType, transactions]);
 
     // Clear all filters
     const handleClearFilters = () => {
