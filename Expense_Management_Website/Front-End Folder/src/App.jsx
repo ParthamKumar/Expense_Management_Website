@@ -19,6 +19,7 @@ import AddAccount from './Components/Accounts/AddAccount'
 import AccountDetails from './Components/Accounts/AccountDetails'
 import Transactions from './Components/Transactions/Transactions'
 import AddTransaction from './Components/Transactions/AddTransaction'
+import TransactionDetails from './Components/Transactions/TransactionDetails'
 
 function App() {
   return (
@@ -41,6 +42,8 @@ function App() {
         <Route path='/dashboard/accounts/details/:id' element={<AccountDetails />}></Route>
         <Route path='/dashboard/transactions' element={<Transactions />}></Route>
         <Route path='/dashboard/transactions/addTransaction' element={<AddTransaction />}></Route>
+        <Route path='/dashboard/transactions/details/:id' element={<TransactionDetails />}></Route>
+
 
 
 

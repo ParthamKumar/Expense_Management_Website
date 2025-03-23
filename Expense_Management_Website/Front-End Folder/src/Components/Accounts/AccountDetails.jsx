@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './AccountDetails.css'; // Ensure CSS file is imported
 
 const AccountDetails = () => {
     const { id } = useParams(); // Get the client id from the URL
+    const navigate = useNavigate();
     const [client, setClient] = useState(null);
     const [transactions, setTransactions] = useState([]); // State for all transactions
     const [filteredTransactions, setFilteredTransactions] = useState([]); // State for filtered transactions
@@ -91,9 +92,29 @@ const AccountDetails = () => {
         setTransactionType('');
     };
 
-    const handleTransactionClick = (transactionId) => {
-        console.log('Transaction clicked:', transactionId);
-        // Implement any desired logic when a transaction row is clicked
+    // Handle delete account
+    const handleDeleteAccount = async () => {
+        if (transactions.length > 0) {
+            alert('Cannot delete account. There are associated transactions.');
+            return;
+        }
+
+        const confirmDelete = window.confirm('Are you sure you want to delete this account?');
+        if (confirmDelete) {
+            try {
+                await axios.delete(`http://localhost:3000/accounts/deleteClient/${id}`);
+                alert('Account deleted successfully!');
+                navigate('/dashboard/accounts'); // Redirect to accounts list
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alert('Failed to delete account');
+            }
+        }
+    };
+
+    // Handle edit account
+    const handleEditAccount = () => {
+        navigate(`/dashboard/accounts/editClient/${id}`); // Navigate to edit account page
     };
 
     // Function to format the date to 'DD MMM YYYY' format
@@ -105,6 +126,11 @@ const AccountDetails = () => {
         return `${day} ${month} ${year}`; // Format as "23 Mar 2025"
     };
 
+    // Handle click on a transaction row
+    const handleTransactionClick = (transactionId) => {
+        navigate(`/dashboard/transactions/details/${transactionId}`); // Navigate to transaction details page
+    };
+
     if (loadingClient && loadingTransactions) {
         return <div>Loading...</div>;
     }
@@ -112,7 +138,17 @@ const AccountDetails = () => {
     return (
         <div className="account-details-container">
             <h2>Account Details</h2>
-            
+
+            {/* Buttons for Edit and Delete Account */}
+            <div className="button-group">
+                <button className="btn btn-edit" onClick={handleEditAccount}>
+                    Edit Account
+                </button>
+                <button className="btn btn-delete" onClick={handleDeleteAccount}>
+                    Delete Account
+                </button>
+            </div>
+
             {clientError && <p>{clientError}</p>}
             {!loadingClient && client ? (
                 <div className="client-info">
@@ -125,7 +161,7 @@ const AccountDetails = () => {
             ) : (
                 <p>No client details found.</p>
             )}
-    
+
             <h3>Transactions</h3>
 
             {/* Search Fields */}
@@ -160,7 +196,7 @@ const AccountDetails = () => {
                     Clear Filters
                 </button>
             </div>
-            
+
             {transactionsError && <p>{transactionsError}</p>}
             {!loadingTransactions && filteredTransactions.length === 0 ? (
                 <p>No transactions found for this client.</p>
@@ -178,7 +214,11 @@ const AccountDetails = () => {
                         </thead>
                         <tbody>
                             {filteredTransactions.map((transaction) => (
-                                <tr key={transaction.transaction_id} onClick={() => handleTransactionClick(transaction.transaction_id)}>
+                                <tr 
+                                    key={transaction.transaction_id} 
+                                    onClick={() => handleTransactionClick(transaction.transaction_id)} // Add click handler
+                                    style={{ cursor: 'pointer' }} // Change cursor to pointer
+                                >
                                     <td>{formatDate(transaction.date)}</td>
                                     <td>{transaction.description ? transaction.description : "No description"}</td>
                                     <td className="credit">

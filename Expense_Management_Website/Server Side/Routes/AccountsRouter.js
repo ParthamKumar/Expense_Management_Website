@@ -109,4 +109,36 @@ router.get('/getClientTransactions/:id', (req, res) => {
     });
 });
 
+// DELETE account by ID
+router.delete('/deleteClient/:id', async (req, res) => {
+    const clientId = req.params.id;
+
+    try {
+        // Check if the client has any transactions
+        const transactions = await con.query(
+            'SELECT * FROM transactions WHERE client_id = ?',
+            [clientId]
+        );
+
+        if (transactions.length > 0) {
+            return res.status(400).json({ message: 'Cannot delete account. There are associated transactions.' });
+        }
+
+        // Delete the client
+        const result = await con.query(
+            'DELETE FROM clients WHERE id = ?',
+            [clientId]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+
+        res.json({ message: 'Client deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting client:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 export default router;

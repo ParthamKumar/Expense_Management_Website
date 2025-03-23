@@ -15,13 +15,65 @@ body, html {
     background-color: #f5f5f5;
     box-sizing: border-box;
     width: 100%;
-    height: 90vh; /* Full height of the viewport */
+    min-height: 100vh; /* Full height of the viewport */
     overflow: hidden; /* Prevent overall page scrolling */
 }
 
 h2, h3 {
     margin-bottom: 20px;
     text-align: center;
+}
+
+/* Buttons positioned at the top-right */
+.button-group {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+/* Base button styles */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Edit button */
+.btn-edit {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #218838;
+}
+
+/* Delete button */
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
 }
 
 .client-info {
@@ -41,8 +93,8 @@ h2, h3 {
 .transactions-table-container {
     width: 80%;
     max-width: 1200px;
-    height: calc(100vh - 300px); /* Adjust height to leave space for Account Details */
-    overflow-y: auto; /* Enable vertical scrolling */
+    height: 400px; /* Fixed height for the table container */
+    overflow: hidden; /* Hide overflow to prevent double scrollbars */
     margin: 0 auto;
     background-color: #fff;
     border-radius: 10px;
@@ -53,9 +105,19 @@ h2, h3 {
 .transactions-table {
     width: 100%;
     border-collapse: collapse;
+    display: block; /* Make the table a block element */
+    max-height: 400px; /* Set a fixed height for the table body */
+    /* overflow-y: auto; Enable vertical scrolling for the table body */
 }
 
-.transactions-table th, .transactions-table td {
+.transactions-table thead,
+.transactions-table tbody {
+    display: block; /* Make thead and tbody block elements */
+    width: 100%;
+}
+
+.transactions-table th,
+.transactions-table td {
     padding: 15px;
     border: 1px solid #ddd;
     text-align: left;
@@ -98,5 +160,12 @@ h2, h3 {
     .transactions-table th, .transactions-table td {
         padding: 10px;
         font-size: 14px;
+    }
+
+    .button-group {
+        position: static; /* Buttons stack vertically on smaller screens */
+        flex-direction: column;
+        align-items: flex-end;
+        margin-bottom: 20px;
     }
 }

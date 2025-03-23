@@ -74,4 +74,78 @@ router.get('/searchtransactions', (req, res) => {
     });
 });
 
+router.get('/gettransaction/:id', (req, res) => {
+    const transactionId = req.params.id;
+
+    // Query to fetch transaction details along with client information
+    const query = `
+        SELECT 
+            t.transaction_id,
+            t.client_id,
+            t.name,
+            t.date,
+            t.description,
+            t.transaction_type,
+            t.amount,
+            t.account,
+            c.name AS client_name,
+            c.email AS client_email
+        FROM transactions t
+        INNER JOIN clients c ON t.client_id = c.id
+        WHERE t.transaction_id = ?
+    `;
+
+    // Execute the query
+    con.query(query, [transactionId], (error, results) => {
+        if (error) {
+            console.error('Error executing query:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+
+        // Return the transaction details with client information
+        const transaction = results[0];
+        res.json({
+            transaction_id: transaction.transaction_id,
+            client_id: transaction.client_id,
+            name: transaction.name,
+            date: transaction.date,
+            description: transaction.description,
+            transaction_type: transaction.transaction_type,
+            amount: transaction.amount,
+            account: transaction.account,
+            client: {
+                name: transaction.client_name,
+                email: transaction.client_email
+            }
+        });
+    });
+});
+
+// DELETE transaction by ID
+router.delete('/deletetransaction/:id', (req, res) => {
+    const transactionId = req.params.id;
+
+    // Query to delete the transaction
+    const query = 'DELETE FROM transactions WHERE transaction_id = ?';
+
+    // Execute the query
+    con.query(query, [transactionId], (error, results) => {
+        if (error) {
+            console.error('Error executing query:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+
+        // Return success message
+        res.json({ message: 'Transaction deleted successfully' });
+    });
+});
+
 export default router;
