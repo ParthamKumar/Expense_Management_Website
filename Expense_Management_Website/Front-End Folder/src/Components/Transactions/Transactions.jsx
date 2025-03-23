@@ -4,8 +4,13 @@ import './Transactions.css'; // Import CSS
 import axios from 'axios';
 
 const Transactions = () => {
-    
     const [transactions, setTransactions] = useState([]);
+    const [filteredTransactions, setFilteredTransactions] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [description, setDescription] = useState('');
+    const [transactionType, setTransactionType] = useState(''); // 'credit' or 'debit'
     const navigate = useNavigate();
 
     // Fetch transactions from the API
@@ -14,12 +19,43 @@ const Transactions = () => {
             try {
                 const response = await axios.get('http://localhost:3000/transactions/gettransactions');
                 setTransactions(response.data);
+                setFilteredTransactions(response.data); // Initialize filtered transactions
             } catch (error) {
                 console.error('Error fetching transactions:', error);
             }
         };
         fetchTransactions();
     }, []);
+
+    // Handle search by name, date range, description, or transaction type
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            try {
+                const response = await axios.get('http://localhost:3000/transactions/searchtransactions', {
+                    params: {
+                        name: searchTerm,
+                        startDate: startDate,
+                        endDate: endDate,
+                        description: description,
+                        transactionType: transactionType
+                    }
+                });
+                setFilteredTransactions(response.data);
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+            }
+        };
+        fetchTransactions();
+    }, [searchTerm, startDate, endDate, description, transactionType]);
+
+    // Clear all filters
+    const handleClearFilters = () => {
+        setSearchTerm('');
+        setStartDate('');
+        setEndDate('');
+        setDescription('');
+        setTransactionType('');
+    };
 
     const handleTransactionClick = (id) => {
         navigate(`/dashboard/transactions/details/${id}`);
@@ -44,6 +80,47 @@ const Transactions = () => {
                     Add Transaction
                 </button>
             </div>
+
+            {/* Search Field */}
+            <div className="search-fields">
+                <input
+                    type="text"
+                    placeholder="Search by name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <input
+                    type="date"
+                    placeholder="Start Date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                />
+                <input
+                    type="date"
+                    placeholder="End Date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                />
+                <input
+                    type="text"
+                    placeholder="Search by description..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                />
+                <select
+                    value={transactionType}
+                    onChange={(e) => setTransactionType(e.target.value)}
+                >
+                    <option value="">All</option>
+                    <option value="credit">Credit</option>
+                    <option value="debit">Debit</option>
+                </select>
+                <button className="btn btn-clear" onClick={handleClearFilters}>
+                    Clear Filters
+                </button>
+            </div>
+
+            {/* Transactions Table */}
             <table className="transactions-table">
                 <thead>
                     <tr>
@@ -56,7 +133,7 @@ const Transactions = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {transactions.map(transaction => (
+                    {filteredTransactions.map(transaction => (
                         <tr key={transaction.transaction_id} onClick={() => handleTransactionClick(transaction.transaction_id)}>
                             <td>{transaction.name}</td>
                             <td>{formatDate(transaction.date)}</td>

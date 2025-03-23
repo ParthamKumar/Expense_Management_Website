@@ -76,5 +76,47 @@ router.get('/getClientTransactions/:id', (req, res) => {
         res.status(200).json(results);
     });
 });
+router.get('/getClientTransactions/:id', (req, res) => {
+    const clientId = req.params.id;
+    const { name, startDate, endDate } = req.query;
+
+    // Base query with client ID
+    let query = 'SELECT * FROM transactions WHERE client_id = ?';
+    const queryParams = [clientId];
+
+    // Add filter for name if provided
+    if (name) {
+        query += ' AND name LIKE ?';
+        queryParams.push(`%${name}%`); // Using LIKE for partial matching
+    }
+
+    // Add filter for date range if both startDate and endDate are provided
+    if (startDate && endDate) {
+        query += ' AND date BETWEEN ? AND ?';
+        queryParams.push(startDate, endDate);
+    } else if (startDate) {
+        // Filter by startDate only
+        query += ' AND date >= ?';
+        queryParams.push(startDate);
+    } else if (endDate) {
+        // Filter by endDate only
+        query += ' AND date <= ?';
+        queryParams.push(endDate);
+    }
+
+    // Execute the query with filters applied
+    con.query(query, queryParams, (err, results) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database error', error: err });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No transactions found for this client with the given filters' });
+        }
+
+        res.status(200).json(results);
+    });
+});
+
 
 export default router;

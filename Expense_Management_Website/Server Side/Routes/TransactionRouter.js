@@ -38,4 +38,37 @@ router.get('/gettransactions', (req, res) => {
     });
 });
 
+router.get('/searchtransactions', (req, res) => {
+    const { name, startDate, endDate, description, transactionType } = req.query;
+    let query = 'SELECT * FROM transactions WHERE 1=1';
+    const params = [];
+
+    if (name) {
+        query += ' AND name LIKE ?';
+        params.push(`%${name}%`);
+    }
+
+    if (startDate && endDate) {
+        query += ' AND date BETWEEN ? AND ?';
+        params.push(startDate, endDate);
+    }
+
+    if (description) {
+        query += ' AND description LIKE ?';
+        params.push(`%${description}%`);
+    }
+
+    if (transactionType) {
+        query += ' AND transaction_type = ?';
+        params.push(transactionType);
+    }
+
+    con.query(query, params, (err, results) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database error', error: err });
+        }
+        res.status(200).json(results);
+    });
+});
+
 export default router;
