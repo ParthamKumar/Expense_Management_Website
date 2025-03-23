@@ -6,11 +6,18 @@ import './AccountDetails.css'; // Ensure CSS file is imported
 const AccountDetails = () => {
     const { id } = useParams(); // Get the client id from the URL
     const [client, setClient] = useState(null);
-    const [transactions, setTransactions] = useState([]); // State for transactions
+    const [transactions, setTransactions] = useState([]); // State for all transactions
+    const [filteredTransactions, setFilteredTransactions] = useState([]); // State for filtered transactions
     const [loadingClient, setLoadingClient] = useState(true);
     const [loadingTransactions, setLoadingTransactions] = useState(true);
     const [clientError, setClientError] = useState(null);
     const [transactionsError, setTransactionsError] = useState(null);
+
+    // State for filters
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [description, setDescription] = useState('');
+    const [transactionType, setTransactionType] = useState('');
 
     useEffect(() => {
         // Fetch client details
@@ -25,11 +32,16 @@ const AccountDetails = () => {
             }
         };
 
-        // Fetch client transactions
+        fetchClientDetails();
+    }, [id]);
+
+    // Fetch client transactions
+    useEffect(() => {
         const fetchClientTransactions = async () => {
             try {
                 const transactionsResponse = await axios.get(`http://localhost:3000/accounts/getClientTransactions/${id}`);
                 setTransactions(transactionsResponse.data);
+                setFilteredTransactions(transactionsResponse.data); // Initialize filtered transactions
             } catch (err) {
                 setTransactionsError('Error fetching client transactions');
             } finally {
@@ -37,9 +49,47 @@ const AccountDetails = () => {
             }
         };
 
-        fetchClientDetails();
         fetchClientTransactions();
     }, [id]);
+
+    // Filter transactions on the spot
+    useEffect(() => {
+        let filtered = transactions;
+
+        // Filter by date range
+        if (startDate && endDate) {
+            filtered = filtered.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                return transactionDate >= start && transactionDate <= end;
+            });
+        }
+
+        // Filter by description
+        if (description) {
+            filtered = filtered.filter(transaction =>
+                transaction.description.toLowerCase().includes(description.toLowerCase())
+            );
+        }
+
+        // Filter by transaction type
+        if (transactionType) {
+            filtered = filtered.filter(transaction =>
+                transaction.transaction_type === transactionType
+            );
+        }
+
+        setFilteredTransactions(filtered);
+    }, [startDate, endDate, description, transactionType, transactions]);
+
+    // Clear all filters
+    const handleClearFilters = () => {
+        setStartDate('');
+        setEndDate('');
+        setDescription('');
+        setTransactionType('');
+    };
 
     const handleTransactionClick = (transactionId) => {
         console.log('Transaction clicked:', transactionId);
@@ -72,16 +122,48 @@ const AccountDetails = () => {
             )}
     
             <h3>Transactions</h3>
+
+            {/* Search Fields */}
+            <div className="search-fields">
+                <input
+                    type="date"
+                    placeholder="Start Date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                />
+                <input
+                    type="date"
+                    placeholder="End Date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                />
+                <input
+                    type="text"
+                    placeholder="Search by description..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                />
+                <select
+                    value={transactionType}
+                    onChange={(e) => setTransactionType(e.target.value)}
+                >
+                    <option value="">All</option>
+                    <option value="credit">Credit</option>
+                    <option value="debit">Debit</option>
+                </select>
+                <button className="btn-clear" onClick={handleClearFilters}>
+                    Clear Filters
+                </button>
+            </div>
             
             {transactionsError && <p>{transactionsError}</p>}
-            {!loadingTransactions && transactions.length === 0 ? (
+            {!loadingTransactions && filteredTransactions.length === 0 ? (
                 <p>No transactions found for this client.</p>
             ) : (
                 <div className="transactions-table-container">
                     <table className="transactions-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
                                 <th>Date</th>
                                 <th>Description</th>
                                 <th>Credit (INR)</th>
@@ -90,9 +172,8 @@ const AccountDetails = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {transactions.map((transaction) => (
+                            {filteredTransactions.map((transaction) => (
                                 <tr key={transaction.transaction_id} onClick={() => handleTransactionClick(transaction.transaction_id)}>
-                                    <td>{transaction.name}</td>
                                     <td>{formatDate(transaction.date)}</td>
                                     <td>{transaction.description ? transaction.description : "No description"}</td>
                                     <td className="credit">
@@ -110,7 +191,6 @@ const AccountDetails = () => {
             )}
         </div>
     );
-    
 };
 
 export default AccountDetails;
