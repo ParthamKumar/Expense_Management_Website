@@ -1,0 +1,83 @@
+.product-details-container {
+    max-width: 100%;
+    margin: 2rem auto;
+    padding: 20px;
+    overflow-x: auto;
+  }
+  
+  .product-details-container h2 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  
+  .transactions-table {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background: white;
+  }
+  
+  .transactions-table table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1200px;
+  }
+  
+  .transactions-table th,
+  .transactions-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border: 1px solid #e2e8f0;
+    font-size: 0.9rem;
+  }
+  
+  .transactions-table th {
+    background-color: #4299e1;
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    left: 0;
+  }
+  
+  .transactions-table tbody tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  
+  .transactions-table tbody tr:hover {
+    background-color: #ebf8ff;
+  }
+  
+  .number {
+    font-family: 'Courier New', Courier, monospace;
+    text-align: right;
+    min-width: 100px;
+  }
+  
+  .total {
+    font-weight: 600;
+    color: #2b6cb0;
+    background-color: #ebf8ff;
+  }
+  
+  /* Currency formatting */
+  .number::before {
+    content: '₹';
+    margin-right: 2px;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .product-details-container {
+      margin: 1rem;
+      padding: 10px;
+    }
+  
+    .transactions-table th,
+    .transactions-table td {
+      padding: 8px 10px;
+      font-size: 0.85rem;
+    }
+  }

@@ -75,6 +75,28 @@ const Dashboard = () => {
                   </span>
                 </Link>
               </li>
+              <li className="w-100">
+                <Link
+                  to="/dashboard/buysell"
+                  className="nav-link px-0 align-middle text-white"
+                >
+                  <i className="fs-4 bi-people ms-2"></i>
+                  <span className="ms-2 d-none d-sm-inline">
+                    Buy/Sell
+                  </span>
+                </Link>
+              </li>
+              <li className="w-100">
+                <Link
+                  to="/dashboard/products"
+                  className="nav-link px-0 align-middle text-white"
+                >
+                  <i className="fs-4 bi-people ms-2"></i>
+                  <span className="ms-2 d-none d-sm-inline">
+                    Products
+                  </span>
+                </Link>
+              </li>
              
               {/* <li className="w-100">
                 <Link

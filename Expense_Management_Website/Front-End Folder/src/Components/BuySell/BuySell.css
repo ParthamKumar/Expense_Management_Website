@@ -1,0 +1,199 @@
+.buy-sell-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .action-tabs {
+    margin-bottom: 2rem;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .new-transaction {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .new-transaction.buy {
+    background-color: #38a169;
+  }
+  
+  .new-transaction.sell {
+    background-color: #e53e3e;
+  }
+  
+  .new-transaction:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  
+  .transaction-history h3 {
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+    font-size: 1.25rem;
+  }
+  
+  .history-table {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .table-header {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #4299e1;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  
+  .table-header span {
+    padding: 0.5rem;
+    text-align: left;
+  }
+  
+  .table-row {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.2s ease;
+    font-size: 0.9rem;
+  }
+  
+  .table-row:last-child {
+    border-bottom: none;
+  }
+  
+  .table-row:hover {
+    background-color: #f8fafc;
+  }
+  
+  .table-row.buy {
+    border-left: 4px solid #38a169;
+  }
+  
+  .table-row.sell {
+    border-left: 4px solid #e53e3e;
+  }
+  
+  .table-row span {
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .type-indicator {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .total {
+    font-weight: 600;
+    color: #2b6cb0;
+  }
+  
+  /* Currency values styling */
+  .table-row span:nth-child(6),
+  .table-row span:nth-child(8),
+  .table-row span:nth-child(9) {
+    font-family: 'Courier New', Courier, monospace;
+    justify-content: flex-end;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 1200px) {
+    .table-header,
+    .table-row {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  
+    .table-header span:nth-child(n+6),
+    .table-row span:nth-child(n+6) {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .buy-sell-container {
+      margin: 1rem;
+      padding: 15px;
+    }
+  
+    .action-buttons {
+      flex-direction: column;
+    }
+  
+    .new-transaction {
+      justify-content: center;
+      width: 100%;
+    }
+  
+    .table-header,
+    .table-row {
+      grid-template-columns: 1fr;
+      padding: 0.5rem;
+    }
+  
+    .table-header span,
+    .table-row span {
+      display: none;
+      padding: 0.5rem;
+    }
+  
+    .table-header span:first-child,
+    .table-row span:first-child {
+      display: flex;
+    }
+  
+    .table-row {
+      position: relative;
+      padding-left: 1rem;
+    }
+  
+    .table-row::before {
+      content: attr(data-type);
+      position: absolute;
+      right: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+  
+    .table-row.buy::before {
+      background-color: #38a169;
+    }
+  
+    .table-row.sell::before {
+      background-color: #e53e3e;
+    }
+  }

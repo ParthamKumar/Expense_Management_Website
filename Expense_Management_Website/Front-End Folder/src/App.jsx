@@ -20,6 +20,11 @@ import AccountDetails from './Components/Accounts/AccountDetails'
 import Transactions from './Components/Transactions/Transactions'
 import AddTransaction from './Components/Transactions/AddTransaction'
 import TransactionDetails from './Components/Transactions/TransactionDetails'
+import Products from './Components/Products/Products'
+import AddProduct from './Components/Products/AddProduct'
+import ProductDetails from './Components/Products/ProductDetails'
+import BuySell from './Components/BuySell/BuySell'
+import BuySellForm from './Components/BuySell/BuySellForm'
 
 function App() {
   return (
@@ -43,6 +48,18 @@ function App() {
         <Route path='/dashboard/transactions' element={<Transactions />}></Route>
         <Route path='/dashboard/transactions/addTransaction' element={<AddTransaction />}></Route>
         <Route path='/dashboard/transactions/details/:id' element={<TransactionDetails />}></Route>
+
+        <Route path='/dashboard/products' element={<Products />}></Route>
+        <Route path='/dashboard/products/addProduct' element={<AddProduct />}></Route>
+        <Route path='/dashboard/products/details/:id' element={<ProductDetails />}></Route>
+
+        <Route path='/dashboard/buysell' element={<BuySell />}></Route>
+        <Route path='/dashboard/buysell/buysellform' element={<BuySellForm />}></Route>
+
+
+
+
+
 
 
 
