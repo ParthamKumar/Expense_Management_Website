@@ -1,6 +1,10 @@
 .accounts-container {
     padding: 20px;
     background-color: #f9f9f9;
+    height: 100vh; /* Full viewport height */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
 }
 
 .header {
@@ -24,9 +28,12 @@
 }
 
 .clients-list {
+    flex: 1;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    padding-right: 10px; /* for scrollbar space */
 }
 
 .client-card {

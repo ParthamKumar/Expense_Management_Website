@@ -40,19 +40,32 @@ const AddTransaction = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const formattedDate = date.toISOString().split('T')[0];
+        // const formattedDate = date.toISOString().split('T')[0];
+        const formattedDate = date.getFullYear() + '-' +
+    String(date.getMonth() + 1).padStart(2, '0') + '-' +
+    String(date.getDate()).padStart(2, '0');
+
         const dateTime = `${formattedDate}T${time}:00`;
         const selectedClient = clients.find(client => String(client.id) === selectedClientId);
 
+        // const transactionData = {
+        //     client_id: selectedClientId,
+        //     name: selectedClient ? selectedClient.name : '',
+        //     date: dateTime,
+        //     description: description.trim(),
+        //     transaction_type: transactionType,
+        //     amount: parseFloat(amount),
+        //     account: useCustomAccount ? customAccount.trim() : selectedAccount,
+        // };
         const transactionData = {
-            client_id: selectedClientId,
-            name: selectedClient ? selectedClient.name : '',
-            date: dateTime,
-            description: description.trim(),
-            transaction_type: transactionType,
-            amount: parseFloat(amount),
-            account: useCustomAccount ? customAccount.trim() : selectedAccount,
-        };
+    client_id: selectedClientId,
+    name: selectedClient ? selectedClient.name : '',
+    date: dateTime,
+    description: description.trim() === '' ? '--' : description.trim(),
+    transaction_type: transactionType,
+    amount: parseFloat(amount),
+    account: useCustomAccount ? customAccount.trim() : selectedAccount,
+};
 
         try {
             const response = await axios.post('http://localhost:3000/transactions/add', transactionData);

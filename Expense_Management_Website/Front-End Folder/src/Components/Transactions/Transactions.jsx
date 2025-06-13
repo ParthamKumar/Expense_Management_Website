@@ -18,11 +18,16 @@ const Transactions = () => {
   const [dailySummary, setDailySummary] = useState(null);
   const navigate = useNavigate();
 
+  // Fetch all transactions and select all initially
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         const response = await axios.get("http://localhost:3000/transactions/gettransactions");
         setTransactions(response.data);
+
+        const allIds = new Set(response.data.map((t) => t.transaction_id));
+        setSelectedTransactions(allIds);
+        setSelectAll(true);
       } catch (error) {
         console.error("Error fetching transactions:", error);
       }
@@ -30,6 +35,7 @@ const Transactions = () => {
     fetchTransactions();
   }, []);
 
+  // Apply filters when filters or transactions change
   useEffect(() => {
     let filtered = transactions;
 
@@ -60,12 +66,12 @@ const Transactions = () => {
 
     setFilteredTransactions(filtered);
 
-    // Default: select all
-    const newSelected = new Set(filtered.map((t) => t.transaction_id));
-    setSelectedTransactions(newSelected);
-    setSelectAll(true);
-  }, [transactions, searchTerm, startDate, endDate, description, transactionType]);
+    // Update "select all" checkbox based on current selection
+    const allVisibleSelected = filtered.every(t => selectedTransactions.has(t.transaction_id));
+    setSelectAll(allVisibleSelected);
+  }, [transactions, searchTerm, startDate, endDate, description, transactionType, selectedTransactions]);
 
+  // Recalculate summary based on selected items
   useEffect(() => {
     const selected = filteredTransactions.filter((t) =>
       selectedTransactions.has(t.transaction_id)
@@ -106,18 +112,23 @@ const Transactions = () => {
 
   const handleCheckboxChange = (id) => {
     const newSelected = new Set(selectedTransactions);
-    if (newSelected.has(id)) newSelected.delete(id);
-    else newSelected.add(id);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
     setSelectedTransactions(newSelected);
-    setSelectAll(newSelected.size === filteredTransactions.length);
   };
 
   const handleSelectAll = () => {
     if (selectAll) {
-      setSelectedTransactions(new Set());
+      const newSelected = new Set(selectedTransactions);
+      filteredTransactions.forEach(t => newSelected.delete(t.transaction_id));
+      setSelectedTransactions(newSelected);
       setSelectAll(false);
     } else {
-      const newSelected = new Set(filteredTransactions.map((t) => t.transaction_id));
+      const newSelected = new Set(selectedTransactions);
+      filteredTransactions.forEach(t => newSelected.add(t.transaction_id));
       setSelectedTransactions(newSelected);
       setSelectAll(true);
     }
@@ -199,9 +210,7 @@ const Transactions = () => {
           </div>
           <div className="summary-item">
             <span className="summary-label">Net Amount:</span>
-            <span
-              className={`summary-value ${dailySummary.netAmount >= 0 ? "credit" : "debit"}`}
-            >
+            <span className={`summary-value ${dailySummary.netAmount >= 0 ? "credit" : "debit"}`}>
               ₹{Math.abs(dailySummary.netAmount).toLocaleString()}
             </span>
           </div>
