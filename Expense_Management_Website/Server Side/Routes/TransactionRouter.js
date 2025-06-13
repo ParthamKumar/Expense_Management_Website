@@ -26,6 +26,133 @@ router.post('/add', (req, res) => {
     });
 });
 
+// router.post('/addFullTransaction', async (req, res) => {
+//   const conn = await pool.getConnection();
+//   try {
+//     await conn.beginTransaction();
+
+//     const {
+//       transaction_type,
+//       date,
+//       party_id,
+//       party_type,
+//       party_description,
+//       product_id,
+//       quantity,
+//       rate,
+//       unit,
+//       buying_amount,
+//       contributors_sum,
+//       total_amount,
+//       buyer_id,
+//       buyer_description,
+//       buyer_type,
+//       contributors
+//     } = req.body;
+
+//     // Validate required fields
+//     if (
+//       !transaction_type || !date || !party_id || !party_type || !product_id ||
+//       !quantity || !rate || !unit || !buying_amount || !total_amount ||
+//       !buyer_id || !buyer_type || !contributors?.length
+//     ) {
+//       return res.status(400).json({ success: false, message: 'Missing required fields' });
+//     }
+
+//     // Insert into buyselltransactions
+//     const [buySellResult] = await conn.query(
+//       `INSERT INTO buyselltransactions 
+//         (transaction_type, date, party_id, party_type, party_description, product_id, quantity, rate, unit, 
+//          buying_amount, contributors_sum, total_amount, buyer_id, buyer_description, buyer_type)
+//        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+//       [
+//         transaction_type,
+//         date,
+//         party_id,
+//         party_type,
+//         party_description || null,
+//         product_id,
+//         quantity,
+//         rate,
+//         unit,
+//         buying_amount,
+//         contributors_sum,
+//         total_amount,
+//         buyer_id,
+//         buyer_description || null,
+//         buyer_type
+//       ]
+//     );
+
+//     const transactionId = buySellResult.insertId;
+
+//     // Insert each contributor
+//     for (const c of contributors) {
+//       await conn.query(
+//         `INSERT INTO contributors (transaction_id, client_id, description, amount, type)
+//          VALUES (?, ?, ?, ?, ?)`,
+//         [transactionId, c.client_id, c.description, c.amount, c.type]
+//       );
+
+//       await conn.query(
+//         `INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, account)
+//          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+//         [
+//           c.client_id,
+//           'Contributor',
+//           date,
+//           c.description || 'Contributor cost',
+//           c.type,
+//           c.amount,
+//           'Contributors'
+//         ]
+//       );
+//     }
+
+//     // Insert party (seller) transaction
+//     await conn.query(
+//       `INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, account)
+//        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+//       [
+//         party_id,
+//         'Seller',
+//         date,
+//         party_description || 'Selling Product',
+//         'credit',
+//         buying_amount,
+//         'BuySell'
+//       ]
+//     );
+
+//     // Insert buyer transaction
+//     await conn.query(
+//       `INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, account)
+//        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+//       [
+//         buyer_id,
+//         'Buyer',
+//         date,
+//         buyer_description || 'Buying Product',
+//         buyer_type,
+//         total_amount,
+//         'BuySell'
+//       ]
+//     );
+
+//     await conn.commit();
+//     res.json({ success: true, message: 'Transaction recorded successfully.' });
+//   } catch (err) {
+//     await conn.rollback();
+//     console.error('Error adding full transaction:', err);
+//     res.status(500).json({ success: false, error: err.message });
+//   } finally {
+//     conn.release();
+//   }
+// });
+
+
+
+
 router.get('/gettransactions', (req, res) => {
     const query = 'SELECT * FROM transactions order by date DESC';
     con.query(query, (err, results) => {

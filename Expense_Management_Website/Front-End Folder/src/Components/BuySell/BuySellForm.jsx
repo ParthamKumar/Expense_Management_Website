@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './BuySellForm.css';
+import { useNavigate } from 'react-router-dom';
 
 const BuySellForm = ({ type, onClose, onSubmit }) => {
+  const [clients, setClients] = useState([]);
+  const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
+    partyName: '',
+    partyDescription: '',
+    partyType: 'credit',
     productName: '',
     quantity: '',
     rate: '',
-    unit: 'kg',
+    unit: '40kg',
     contributors: [{ name: '', description: '', amount: '', type: 'credit' }],
     buyerName: '',
     buyerDescription: '',
@@ -18,20 +27,32 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
   });
 
   useEffect(() => {
-    const buyingAmount = (parseFloat(formData.quantity) || 0) * (parseFloat(formData.rate) || 0);
+    const fetchDropdowns = async () => {
+      try {
+        const clientRes = await axios.get('http://localhost:3000/accounts/getClients');
+        const productRes = await axios.get('http://localhost:3000/products/getProducts');
+        setClients(clientRes.data || []);
+        setProducts(productRes.data || []);
+      } catch (err) {
+        console.error('Error fetching clients/products:', err);
+      }
+    };
+    fetchDropdowns();
+  }, []);
 
+  useEffect(() => {
+    const buyingAmount = (parseFloat(formData.quantity) || 0) * (parseFloat(formData.rate) || 0);
     const contributorsSum = formData.contributors.reduce((sum, c) => {
       const amount = parseFloat(c.amount) || 0;
-      return c.type === 'debit' ? sum + amount : sum - amount;
+      return c.type === 'credit' ? sum + amount : sum - amount;
     }, 0);
-
-    const total = buyingAmount + contributorsSum;
+    const totalAmount = buyingAmount + contributorsSum;
 
     setFormData(prev => ({
       ...prev,
-      contributorsSum: contributorsSum.toFixed(2),
-      buyingAmount: buyingAmount.toFixed(2),
-      totalAmount: total.toFixed(2)
+      buyingAmount,
+      contributorsSum,
+      totalAmount
     }));
   }, [formData.quantity, formData.rate, formData.contributors]);
 
@@ -41,9 +62,9 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
   };
 
   const handleContributorChange = (index, field, value) => {
-    const newContributors = [...formData.contributors];
-    newContributors[index][field] = value;
-    setFormData(prev => ({ ...prev, contributors: newContributors }));
+    const updated = [...formData.contributors];
+    updated[index][field] = value;
+    setFormData(prev => ({ ...prev, contributors: updated }));
   };
 
   const addContributor = () => {
@@ -59,10 +80,54 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
     setFormData(prev => ({ ...prev, contributors: updated }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
-    onClose();
+    try {
+      const party = clients.find(c => c.name === formData.partyName);
+      const buyer = clients.find(c => c.name === formData.buyerName);
+      const product = products.find(p => p.name === formData.productName);
+
+      if (!party || !buyer || !product) {
+        alert('Please ensure party, buyer, and product are selected properly.');
+        return;
+      }
+
+      const payload = {
+        transaction_type: type,
+        date: formData.date,
+        party_id: party.id,
+        party_description: formData.partyDescription,
+        party_type: formData.partyType,
+        product_id: product.id,
+        quantity: parseFloat(formData.quantity),
+        rate: parseFloat(formData.rate),
+        unit: formData.unit,
+        buying_amount: formData.buyingAmount,
+        contributors_sum: formData.contributorsSum,
+        total_amount: formData.totalAmount,
+        buyer_id: buyer.id,
+        buyer_description: formData.buyerDescription,
+        buyer_type: formData.buyerType,
+        contributors: formData.contributors.map(c => {
+          const contributorClient = clients.find(cl => cl.name === c.name);
+          return {
+            client_id: contributorClient?.id || null,
+            description: c.description,
+            amount: parseFloat(c.amount),
+            type: c.type
+          };
+        }).filter(c => c.client_id !== null)
+      };
+
+      const res =  await axios.post('http://localhost:3000/buysell/addBuySellTransaction', payload);
+
+      alert('Transaction saved successfully!');
+      onSubmit(res.data);
+      navigate('/dashboard/buysell');
+    } catch (err) {
+      console.error('Error saving transaction:', err);
+      alert('Failed to save transaction.');
+    }
   };
 
   return (
@@ -75,26 +140,58 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
 
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
-
-            {/* SECTION 1: Buying */}
+            {/* Section 1: Buying */}
             <div className="form-section">
               <h3>From Whom You Are Buying</h3>
+
               <div className="input-group">
                 <label>Date*</label>
                 <input type="date" name="date" value={formData.date} onChange={handleChange} required />
               </div>
+
+              <div className="input-group">
+                <label>Party Name*</label>
+                <select name="partyName" value={formData.partyName} onChange={handleChange} required>
+                  <option value="">-- Select Client --</option>
+                  {clients.map((c, i) => (
+                    <option key={i} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label>Party Type</label>
+                <select name="partyType" value={formData.partyType} onChange={handleChange}>
+                  <option value="debit">Debit</option>
+                  <option value="credit">Credit</option>
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label>Party Description</label>
+                <input type="text" name="partyDescription" value={formData.partyDescription} onChange={handleChange} />
+              </div>
+
               <div className="input-group">
                 <label>Product Name*</label>
-                <input type="text" name="productName" value={formData.productName} onChange={handleChange} required />
+                <select name="productName" value={formData.productName} onChange={handleChange} required>
+                  <option value="">-- Select Product --</option>
+                  {products.map((p, i) => (
+                    <option key={i} value={p.name}>{p.name}</option>
+                  ))}
+                </select>
               </div>
+
               <div className="input-group">
                 <label>Quantity*</label>
                 <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} required step="0.01" />
               </div>
+
               <div className="input-group">
                 <label>Rate per Unit*</label>
                 <input type="number" name="rate" value={formData.rate} onChange={handleChange} required step="0.01" />
               </div>
+
               <div className="input-group">
                 <label>Unit*</label>
                 <select name="unit" value={formData.unit} onChange={handleChange}>
@@ -104,24 +201,28 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
                   <option value="litre">Litre</option>
                 </select>
               </div>
+
               <div className="input-group">
                 <label>Buying Amount</label>
-                <input type="number" value={formData.buyingAmount} readOnly className="read-only" />
+                <input type="number" name="buyingAmount" value={formData.buyingAmount} readOnly />
               </div>
             </div>
 
-            {/* SECTION 2: Contributors */}
+            {/* Section 2: Contributors */}
             <div className="form-section">
               <h3>Contributors (Transport, Labor, etc.)</h3>
               {formData.contributors.map((c, i) => (
                 <div key={i} className="contributor-row">
-                  <input
-                    type="text"
-                    placeholder="Client Name"
+                  <select
                     value={c.name}
                     onChange={e => handleContributorChange(i, 'name', e.target.value)}
                     required
-                  />
+                  >
+                    <option value="">-- Select Client --</option>
+                    {clients.map((cl, idx) => (
+                      <option key={idx} value={cl.name}>{cl.name}</option>
+                    ))}
+                  </select>
                   <input
                     type="text"
                     placeholder="Description"
@@ -150,21 +251,29 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
 
               <div className="input-group">
                 <label>Contributors Total</label>
-                <input type="number" value={formData.contributorsSum} readOnly className="read-only" />
+                <input type="number" name="contributorsSum" value={formData.contributorsSum} readOnly />
               </div>
             </div>
 
-            {/* SECTION 3: Selling */}
+            {/* Section 3: Selling */}
             <div className="form-section">
               <h3>To Whom You Are Selling</h3>
+
               <div className="input-group">
                 <label>Buyer Name*</label>
-                <input type="text" name="buyerName" value={formData.buyerName} onChange={handleChange} required />
+                <select name="buyerName" value={formData.buyerName} onChange={handleChange} required>
+                  <option value="">-- Select Client --</option>
+                  {clients.map((client, i) => (
+                    <option key={i} value={client.name}>{client.name}</option>
+                  ))}
+                </select>
               </div>
+
               <div className="input-group">
                 <label>Buyer Description</label>
                 <input type="text" name="buyerDescription" value={formData.buyerDescription} onChange={handleChange} />
               </div>
+
               <div className="input-group">
                 <label>Buyer Type</label>
                 <select name="buyerType" value={formData.buyerType} onChange={handleChange}>
@@ -172,12 +281,12 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
                   <option value="credit">Credit</option>
                 </select>
               </div>
+
               <div className="input-group">
                 <label>Grand Total</label>
-                <input type="number" value={formData.totalAmount} readOnly className="read-only" />
+                <input type="number" name="totalAmount" value={formData.totalAmount} readOnly />
               </div>
             </div>
-
           </div>
 
           <div className="form-actions">

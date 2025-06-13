@@ -5,6 +5,7 @@ import { EmployeeRouter } from "./Routes/EmployeeRoute.js";
 import AccountsRouter from "./Routes/AccountsRouter.js";
 import TransactionRouter from "./Routes/TransactionRouter.js"; // Fixed typo
 import ProductsRouter from './Routes/ProductsRouter.js'
+import BuySellRouter from './Routes/BuySellRouter.js'
 import Jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 
@@ -21,6 +22,7 @@ app.use('/employee', EmployeeRouter);
 app.use('/accounts', AccountsRouter);
 app.use('/transactions', TransactionRouter); // Fixed typo
 app.use('/products',ProductsRouter)
+app.use('/buysell',BuySellRouter)
 app.use(express.static('Public'));
 
 const verifyUser = (req, res, next) => {
