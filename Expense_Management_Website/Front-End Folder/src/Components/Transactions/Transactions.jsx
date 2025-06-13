@@ -242,11 +242,15 @@ const Transactions = () => {
               <td onClick={() => handleTransactionClick(t.transaction_id)}>{formatDate(t.date)}</td>
               <td onClick={() => handleTransactionClick(t.transaction_id)}>{t.description}</td>
               <td className="credit" onClick={() => handleTransactionClick(t.transaction_id)}>
-                {t.transaction_type === "credit" ? `₹${t.amount.toLocaleString()}` : "-"}
-              </td>
-              <td className="debit" onClick={() => handleTransactionClick(t.transaction_id)}>
-                {t.transaction_type === "debit" ? `₹${t.amount.toLocaleString()}` : "-"}
-              </td>
+  {t.transaction_type === "credit"
+    ? `₹${t.amount.toLocaleString()} (${t.transaction_id})`
+    : "-"}
+</td>
+<td className="debit" onClick={() => handleTransactionClick(t.transaction_id)}>
+  {t.transaction_type === "debit"
+    ? `₹${t.amount.toLocaleString()} (${t.transaction_id})`
+    : "-"}
+</td>
               <td onClick={() => handleTransactionClick(t.transaction_id)}>{t.account}</td>
               <td style={{ textAlign: "right" }}>
                 <input

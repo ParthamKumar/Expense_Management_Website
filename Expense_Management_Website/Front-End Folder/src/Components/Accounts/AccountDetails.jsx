@@ -13,7 +13,6 @@ const AccountDetails = () => {
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [selectedTransactionIds, setSelectedTransactionIds] = useState([]);
-  const [selectAll, setSelectAll] = useState(true);
 
   const [loadingClient, setLoadingClient] = useState(true);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
@@ -47,9 +46,7 @@ const AccountDetails = () => {
       try {
         const res = await axios.get(`http://localhost:3000/accounts/getClientTransactions/${id}`);
         setTransactions(res.data);
-        setFilteredTransactions(res.data);
-        setSelectedTransactionIds(res.data.map(t => t.transaction_id));
-        calculateSummary(res.data);
+        setSelectedTransactionIds(res.data.map((t) => t.transaction_id));
       } catch (err) {
         setTransactionsError("Error fetching transactions");
       } finally {
@@ -60,15 +57,12 @@ const AccountDetails = () => {
   }, [id]);
 
   useEffect(() => {
-    let filtered = transactions;
+    let filtered = [...transactions];
 
     if (startDate && endDate) {
-      filtered = filtered.filter((transaction) => {
-        const transactionDate = new Date(transaction.date);
-        const txDate = transactionDate.toISOString().split("T")[0];
-        const start = startDate.toISOString().split("T")[0];
-        const end = endDate.toISOString().split("T")[0];
-        return txDate >= start && txDate <= end;
+      filtered = filtered.filter((t) => {
+        const txDate = new Date(t.date);
+        return txDate >= startDate && txDate <= endDate;
       });
     }
 
@@ -83,17 +77,19 @@ const AccountDetails = () => {
     }
 
     setFilteredTransactions(filtered);
-    const selectedTxns = filtered.filter(t =>
+
+    const selectedFiltered = filtered.filter((t) =>
       selectedTransactionIds.includes(t.transaction_id)
     );
-    calculateSummary(selectedTxns);
-  }, [startDate, endDate, description, transactionType, transactions, selectedTransactionIds]);
+    calculateSummary(selectedFiltered);
+  }, [transactions, startDate, endDate, description, transactionType, selectedTransactionIds]);
 
   const calculateSummary = (txns) => {
-    let credit = 0, debit = 0;
+    let credit = 0,
+      debit = 0;
     txns.forEach(({ transaction_type, amount }) => {
       if (transaction_type === "credit") credit += amount;
-      if (transaction_type === "debit") debit += amount;
+      else if (transaction_type === "debit") debit += amount;
     });
     setSummary({ totalCredit: credit, totalDebit: debit });
   };
@@ -132,27 +128,44 @@ const AccountDetails = () => {
 
   const formatDate = (d) => {
     const date = new Date(d);
-    return `${date.getDate().toString().padStart(2, "0")} ${date.toLocaleString("default", { month: "short" })} ${date.getFullYear()}`;
+    return `${date.getDate().toString().padStart(2, "0")} ${date.toLocaleString("default", {
+      month: "short",
+    })} ${date.getFullYear()}`;
   };
 
   const handleTransactionClick = (txnId) => {
     navigate(`/dashboard/transactions/details/${txnId}`);
   };
 
-  const handleSelectAllChange = () => {
-    if (selectAll) {
-      setSelectedTransactionIds([]);
+  const handleSelectAllChange = (e) => {
+    const checked = e.target.checked;
+    if (checked) {
+      const newSelected = [
+        ...new Set([
+          ...selectedTransactionIds,
+          ...filteredTransactions.map((t) => t.transaction_id),
+        ]),
+      ];
+      setSelectedTransactionIds(newSelected);
     } else {
-      setSelectedTransactionIds(filteredTransactions.map(t => t.transaction_id));
+      const newSelected = selectedTransactionIds.filter(
+        (id) => !filteredTransactions.some((t) => t.transaction_id === id)
+      );
+      setSelectedTransactionIds(newSelected);
     }
-    setSelectAll(!selectAll);
   };
 
   const handleTransactionCheckboxChange = (txnId) => {
-    setSelectedTransactionIds(prev =>
-      prev.includes(txnId) ? prev.filter(id => id !== txnId) : [...prev, txnId]
+    setSelectedTransactionIds((prev) =>
+      prev.includes(txnId)
+        ? prev.filter((id) => id !== txnId)
+        : [...prev, txnId]
     );
   };
+
+  const isAllFilteredSelected = filteredTransactions.every((t) =>
+    selectedTransactionIds.includes(t.transaction_id)
+  );
 
   if (loadingClient || loadingTransactions) return <div>Loading...</div>;
 
@@ -161,7 +174,7 @@ const AccountDetails = () => {
       <h2>Account Details</h2>
 
       {clientError && <p>{clientError}</p>}
-      {client ? (
+      {client && (
         <div className="client-section">
           <div className="client-section-header" onClick={toggleClientInfo}>
             <h3>Client Information</h3>
@@ -184,13 +197,13 @@ const AccountDetails = () => {
             </div>
           )}
         </div>
-      ) : <p>No client details found.</p>}
+      )}
 
       <h3>Transactions</h3>
 
       <div className="filter-panel">
-        <DatePicker selected={startDate} onChange={(date) => setStartDate(date)} dateFormat="dd MMM yyyy" showMonthDropdown showYearDropdown dropdownMode="select" />
-        <DatePicker selected={endDate} onChange={(date) => setEndDate(date)} dateFormat="dd MMM yyyy" showMonthDropdown showYearDropdown dropdownMode="select" />
+        <DatePicker selected={startDate} onChange={(date) => setStartDate(date)} dateFormat="dd MMM yyyy" />
+        <DatePicker selected={endDate} onChange={(date) => setEndDate(date)} dateFormat="dd MMM yyyy" />
         <input type="text" placeholder="Search by description..." value={description} onChange={(e) => setDescription(e.target.value)} />
         <select value={transactionType} onChange={(e) => setTransactionType(e.target.value)}>
           <option value="">All</option>
@@ -229,7 +242,7 @@ const AccountDetails = () => {
                 <th>Debit (INR)</th>
                 <th>Account</th>
                 <th style={{ width: "40px", textAlign: "center" }}>
-                  <input type="checkbox" checked={selectAll} onChange={handleSelectAllChange} />
+                  <input type="checkbox" checked={isAllFilteredSelected} onChange={handleSelectAllChange} />
                 </th>
               </tr>
             </thead>
@@ -240,12 +253,12 @@ const AccountDetails = () => {
                   <td onClick={() => handleTransactionClick(txn.transaction_id)}>{txn.description || "No description"}</td>
                   <td className="text-credit" onClick={() => handleTransactionClick(txn.transaction_id)}>
   {txn.transaction_type === "credit"
-    ? `₹${txn.amount.toLocaleString()} ( ${txn.transaction_id})`
+    ? `₹${txn.amount.toLocaleString()} (${txn.transaction_id})`
     : "-"}
 </td>
 <td className="text-debit" onClick={() => handleTransactionClick(txn.transaction_id)}>
   {txn.transaction_type === "debit"
-    ? `₹${txn.amount.toLocaleString()} ( ${txn.transaction_id})`
+    ? `₹${txn.amount.toLocaleString()} (${txn.transaction_id})`
     : "-"}
 </td>
 
