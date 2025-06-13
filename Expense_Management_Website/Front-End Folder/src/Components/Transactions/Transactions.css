@@ -134,7 +134,7 @@
 /* Scrollable Table Body */
 .transactions-table tbody {
     display: block;
-    max-height: 500px;
+    max-height: 400px;
     overflow-y: auto;
 }
 
@@ -200,3 +200,14 @@
         gap: 10px;
     }
 }
+.transactions-table th,
+.transactions-table td {
+  padding: 8px;
+}
+
+.transactions-table th:last-child,
+.transactions-table td:last-child {
+  width: 40px;
+  text-align: right;
+}
+

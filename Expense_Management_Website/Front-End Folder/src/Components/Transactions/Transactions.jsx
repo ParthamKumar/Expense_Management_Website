@@ -13,15 +13,15 @@ const Transactions = () => {
   const [endDate, setEndDate] = useState(new Date());
   const [description, setDescription] = useState("");
   const [transactionType, setTransactionType] = useState("");
+  const [selectedTransactions, setSelectedTransactions] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(true);
   const [dailySummary, setDailySummary] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3000/transactions/gettransactions"
-        );
+        const response = await axios.get("http://localhost:3000/transactions/gettransactions");
         setTransactions(response.data);
       } catch (error) {
         console.error("Error fetching transactions:", error);
@@ -34,61 +34,56 @@ const Transactions = () => {
     let filtered = transactions;
 
     if (searchTerm) {
-      filtered = filtered.filter((transaction) =>
-        transaction.name.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter((t) =>
+        t.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (startDate && endDate) {
-      filtered = filtered.filter((transaction) => {
-        const transactionDate = new Date(transaction.date);
-        return transactionDate >= startDate && transactionDate <= endDate;
+      filtered = filtered.filter((t) => {
+        const txDate = new Date(t.date).toISOString().split("T")[0];
+        const start = startDate.toISOString().split("T")[0];
+        const end = endDate.toISOString().split("T")[0];
+        return txDate >= start && txDate <= end;
       });
     }
 
     if (description) {
-      filtered = filtered.filter((transaction) =>
-        transaction.description.toLowerCase().includes(description.toLowerCase())
+      filtered = filtered.filter((t) =>
+        t.description.toLowerCase().includes(description.toLowerCase())
       );
     }
 
     if (transactionType) {
-      filtered = filtered.filter(
-        (transaction) => transaction.transaction_type === transactionType
-      );
+      filtered = filtered.filter((t) => t.transaction_type === transactionType);
     }
 
     setFilteredTransactions(filtered);
 
-    if (startDate && endDate) {
-      calculateSummary(filtered);
-    } else {
-      setDailySummary(null);
-    }
-  }, [
-    transactions,
-    searchTerm,
-    startDate,
-    endDate,
-    description,
-    transactionType,
-  ]);
+    // Default: select all
+    const newSelected = new Set(filtered.map((t) => t.transaction_id));
+    setSelectedTransactions(newSelected);
+    setSelectAll(true);
+  }, [transactions, searchTerm, startDate, endDate, description, transactionType]);
+
+  useEffect(() => {
+    const selected = filteredTransactions.filter((t) =>
+      selectedTransactions.has(t.transaction_id)
+    );
+    calculateSummary(selected);
+  }, [filteredTransactions, selectedTransactions]);
 
   const calculateSummary = (transactions) => {
     const summary = transactions.reduce(
-      (acc, transaction) => {
-        const amount = parseFloat(transaction.amount);
-        if (transaction.transaction_type === "credit") {
-          acc.totalCredit += amount;
-        } else if (transaction.transaction_type === "debit") {
-          acc.totalDebit += amount;
-        }
+      (acc, t) => {
+        const amount = parseFloat(t.amount);
+        if (t.transaction_type === "credit") acc.totalCredit += amount;
+        else if (t.transaction_type === "debit") acc.totalDebit += amount;
         acc.transactionCount += 1;
         return acc;
       },
       { totalCredit: 0, totalDebit: 0, transactionCount: 0 }
     );
-
     summary.netAmount = summary.totalCredit - summary.totalDebit;
     setDailySummary(summary);
   };
@@ -99,7 +94,6 @@ const Transactions = () => {
     setEndDate(new Date());
     setDescription("");
     setTransactionType("");
-    setDailySummary(null);
   };
 
   const handleTransactionClick = (id) => {
@@ -108,6 +102,25 @@ const Transactions = () => {
 
   const handleAddTransaction = () => {
     navigate("/dashboard/transactions/addTransaction");
+  };
+
+  const handleCheckboxChange = (id) => {
+    const newSelected = new Set(selectedTransactions);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
+    setSelectedTransactions(newSelected);
+    setSelectAll(newSelected.size === filteredTransactions.length);
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedTransactions(new Set());
+      setSelectAll(false);
+    } else {
+      const newSelected = new Set(filteredTransactions.map((t) => t.transaction_id));
+      setSelectedTransactions(newSelected);
+      setSelectAll(true);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -123,10 +136,7 @@ const Transactions = () => {
     <div className="transactions-container">
       <div className="header">
         <h4>Transactions</h4>
-        <button
-          className="btn btn-primary add-transaction-btn"
-          onClick={handleAddTransaction}
-        >
+        <button className="btn btn-primary add-transaction-btn" onClick={handleAddTransaction}>
           Add Transaction
         </button>
       </div>
@@ -166,10 +176,7 @@ const Transactions = () => {
           onChange={(e) => setDescription(e.target.value)}
         />
 
-        <select
-          value={transactionType}
-          onChange={(e) => setTransactionType(e.target.value)}
-        >
+        <select value={transactionType} onChange={(e) => setTransactionType(e.target.value)}>
           <option value="">All</option>
           <option value="credit">Credit</option>
           <option value="debit">Debit</option>
@@ -184,31 +191,23 @@ const Transactions = () => {
         <div className="daily-summary-box">
           <div className="summary-item">
             <span className="summary-label">Total Credit:</span>
-            <span className="summary-value credit">
-              ₹{dailySummary.totalCredit.toLocaleString()}
-            </span>
+            <span className="summary-value credit">₹{dailySummary.totalCredit.toLocaleString()}</span>
           </div>
           <div className="summary-item">
             <span className="summary-label">Total Debit:</span>
-            <span className="summary-value debit">
-              ₹{dailySummary.totalDebit.toLocaleString()}
-            </span>
+            <span className="summary-value debit">₹{dailySummary.totalDebit.toLocaleString()}</span>
           </div>
           <div className="summary-item">
             <span className="summary-label">Net Amount:</span>
             <span
-              className={`summary-value ${
-                dailySummary.netAmount >= 0 ? "credit" : "debit"
-              }`}
+              className={`summary-value ${dailySummary.netAmount >= 0 ? "credit" : "debit"}`}
             >
               ₹{Math.abs(dailySummary.netAmount).toLocaleString()}
             </span>
           </div>
           <div className="summary-item">
             <span className="summary-label">Transactions:</span>
-            <span className="summary-value">
-              {dailySummary.transactionCount}
-            </span>
+            <span className="summary-value">{dailySummary.transactionCount}</span>
           </div>
         </div>
       )}
@@ -222,30 +221,31 @@ const Transactions = () => {
             <th>Credit (INR)</th>
             <th>Debit (INR)</th>
             <th>Account</th>
+            <th style={{ width: "40px", textAlign: "right" }}>
+              <input type="checkbox" checked={selectAll} onChange={handleSelectAll} />
+            </th>
           </tr>
         </thead>
         <tbody>
-          {filteredTransactions.map((transaction) => (
-            <tr
-              key={transaction.transaction_id}
-              onClick={() => handleTransactionClick(transaction.transaction_id)}
-            >
-              <td>
-                {transaction.name} {transaction.id}
+          {filteredTransactions.map((t) => (
+            <tr key={t.transaction_id}>
+              <td onClick={() => handleTransactionClick(t.transaction_id)}>{t.name}</td>
+              <td onClick={() => handleTransactionClick(t.transaction_id)}>{formatDate(t.date)}</td>
+              <td onClick={() => handleTransactionClick(t.transaction_id)}>{t.description}</td>
+              <td className="credit" onClick={() => handleTransactionClick(t.transaction_id)}>
+                {t.transaction_type === "credit" ? `₹${t.amount.toLocaleString()}` : "-"}
               </td>
-              <td>{formatDate(transaction.date)}</td>
-              <td>{transaction.description}</td>
-              <td className="credit">
-                {transaction.transaction_type === "credit"
-                  ? `₹${transaction.amount.toLocaleString()} (${transaction.transaction_id})`
-                  : "-"}
+              <td className="debit" onClick={() => handleTransactionClick(t.transaction_id)}>
+                {t.transaction_type === "debit" ? `₹${t.amount.toLocaleString()}` : "-"}
               </td>
-              <td className="debit">
-                {transaction.transaction_type === "debit"
-                  ? `₹${transaction.amount.toLocaleString()} (${transaction.transaction_id})`
-                  : "-"}
+              <td onClick={() => handleTransactionClick(t.transaction_id)}>{t.account}</td>
+              <td style={{ textAlign: "right" }}>
+                <input
+                  type="checkbox"
+                  checked={selectedTransactions.has(t.transaction_id)}
+                  onChange={() => handleCheckboxChange(t.transaction_id)}
+                />
               </td>
-              <td>{transaction.account}</td>
             </tr>
           ))}
         </tbody>
