@@ -1,5 +1,7 @@
 import express from "express";
-import con from "../utils/db.js"; // Ensure the correct MySQL connection is imported
+// import con from "../utils/db.js"; // Ensure the correct MySQL connection is imported
+import { con, pool } from "../utils/db.js";
+
 
 const router = express.Router();
 

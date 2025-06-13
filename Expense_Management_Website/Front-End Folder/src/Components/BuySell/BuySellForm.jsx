@@ -80,55 +80,58 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
     setFormData(prev => ({ ...prev, contributors: updated }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const party = clients.find(c => c.name === formData.partyName);
-      const buyer = clients.find(c => c.name === formData.buyerName);
-      const product = products.find(p => p.name === formData.productName);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const party = clients.find(c => c.name === formData.partyName);
+    const buyer = clients.find(c => c.name === formData.buyerName);
+    const product = products.find(p => p.name === formData.productName);
 
-      if (!party || !buyer || !product) {
-        alert('Please ensure party, buyer, and product are selected properly.');
-        return;
-      }
-
-      const payload = {
-        transaction_type: type,
-        date: formData.date,
-        party_id: party.id,
-        party_description: formData.partyDescription,
-        party_type: formData.partyType,
-        product_id: product.id,
-        quantity: parseFloat(formData.quantity),
-        rate: parseFloat(formData.rate),
-        unit: formData.unit,
-        buying_amount: formData.buyingAmount,
-        contributors_sum: formData.contributorsSum,
-        total_amount: formData.totalAmount,
-        buyer_id: buyer.id,
-        buyer_description: formData.buyerDescription,
-        buyer_type: formData.buyerType,
-        contributors: formData.contributors.map(c => {
-          const contributorClient = clients.find(cl => cl.name === c.name);
-          return {
-            client_id: contributorClient?.id || null,
-            description: c.description,
-            amount: parseFloat(c.amount),
-            type: c.type
-          };
-        }).filter(c => c.client_id !== null)
-      };
-
-      const res =  await axios.post('http://localhost:3000/buysell/addBuySellTransaction', payload);
-
-      alert('Transaction saved successfully!');
-      onSubmit(res.data);
-      navigate('/dashboard/buysell');
-    } catch (err) {
-      console.error('Error saving transaction:', err);
-      alert('Failed to save transaction.');
+    if (!party || !buyer || !product) {
+      alert('Please ensure party, buyer, and product are selected properly.');
+      return;
     }
-  };
+
+    const payload = {
+      transaction_type: type,
+      date: formData.date,
+      party_id: party.id,
+      party_description: formData.partyDescription,
+      party_type: formData.partyType,
+      product_id: product.id,
+      quantity: parseFloat(formData.quantity),
+      rate: parseFloat(formData.rate),
+      unit: formData.unit,
+      buying_amount: parseFloat(formData.buyingAmount),
+      contributors_sum: parseFloat(formData.contributorsSum),
+      total_amount: parseFloat(formData.totalAmount),
+      buyer_id: buyer.id,
+      buyer_description: formData.buyerDescription,
+      buyer_type: formData.buyerType,
+      contributors: formData.contributors.map(c => {
+        const contributorClient = clients.find(cl => cl.name === c.name);
+        return {
+          client_id: contributorClient?.id || null,
+          description: c.description,
+          amount: parseFloat(c.amount),
+          type: c.type
+        };
+      }).filter(c => c.client_id !== null)
+    };
+
+    // ✅ Log payload for Postman testing
+    console.log("🚀 Form Payload:", JSON.stringify(payload, null, 2));
+
+    const res = await axios.post('http://localhost:3000/buysell/addBuySellTransaction', payload);
+
+    alert('Transaction saved successfully!');
+    onSubmit(res.data);
+    navigate('/dashboard/buysell');
+  } catch (err) {
+    console.error('Error saving transaction:', err);
+    alert('Failed to save transaction.');
+  }
+};
 
   return (
     <div className="form-overlay">
