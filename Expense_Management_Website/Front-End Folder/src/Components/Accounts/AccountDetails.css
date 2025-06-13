@@ -1,171 +1,224 @@
-/* AccountDetails.css */
-
 body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* prevent full page scrolling */
 }
 
-.account-details-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    background-color: #f5f5f5;
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 100vh; /* Full height of the viewport */
-    overflow: hidden; /* Prevent overall page scrolling */
+.account-details-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: #f5f5f5;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
 }
 
 h2, h3 {
-    margin-bottom: 20px;
-    text-align: center;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
-/* Buttons positioned at the top-right */
-.button-group {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    gap: 10px;
+.client-action-buttons {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
 }
 
-/* Base button styles */
-.btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+.action-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.btn:hover {
-    transform: translateY(-1px);
+.action-btn:hover {
+  transform: translateY(-1px);
 }
 
-.btn:active {
-    transform: translateY(0);
+.action-btn:active {
+  transform: translateY(0);
 }
 
-/* Edit button */
-.btn-edit {
-    background-color: #28a745;
-    color: white;
+.action-edit {
+  background-color: #4caf50;
+  color: white;
 }
 
-.btn-edit:hover {
-    background-color: #218838;
+.action-delete {
+  background-color: #f44336;
+  color: white;
 }
 
-/* Delete button */
-.btn-delete {
-    background-color: #dc3545;
-    color: white;
+.client-section {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 80%;
+  margin-bottom: 20px;
+  position: relative;
 }
 
-.btn-delete:hover {
-    background-color: #c82333;
+.client-section-header {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
 }
 
-.client-info {
-    margin-bottom: 20px;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 60%; /* Adjust width as needed */
+.arrow-toggle {
+  font-size: 20px;
+  transition: transform 0.3s ease;
 }
 
-.client-info p {
-    margin: 10px 0;
+.arrow-toggle.open {
+  transform: rotate(180deg);
 }
 
-/* Container for the scrollable transactions table */
-.transactions-table-container {
-    width: 80%;
-    max-width: 1200px;
-    height: 400px; /* Fixed height for the table container */
-    overflow: hidden; /* Hide overflow to prevent double scrollbars */
-    margin: 0 auto;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.client-section-body {
+  margin-top: 15px;
 }
 
-/* Styling for the transactions table */
-.transactions-table {
-    width: 100%;
-    border-collapse: collapse;
-    display: block; /* Make the table a block element */
-    max-height: 400px; /* Set a fixed height for the table body */
-    /* overflow-y: auto; Enable vertical scrolling for the table body */
+.client-data-list p {
+  margin: 5px 0;
 }
 
-.transactions-table thead,
-.transactions-table tbody {
-    display: block; /* Make thead and tbody block elements */
-    width: 100%;
+.filter-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
 }
 
-.transactions-table th,
-.transactions-table td {
-    padding: 15px;
-    border: 1px solid #ddd;
-    text-align: left;
-    font-size: 16px;
+.filter-panel input,
+.filter-panel select,
+.filter-panel .react-datepicker-wrapper {
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
 }
 
-.transactions-table th {
-    background-color: #007BFF;
-    color: white;
-    position: sticky;
-    top: 0; /* Make the header sticky */
-    z-index: 1; /* Ensure the header stays above the rows */
+.filter-clear-btn {
+  padding: 8px 12px;
+  border: none;
+  background-color: #1976d2;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
-.transactions-table tr:nth-child(even) {
-    background-color: #f2f2f2;
+.filter-clear-btn:hover {
+  background-color: #125ca1;
 }
 
-.transactions-table tr:hover {
-    background-color: #e9f1f8;
-    cursor: pointer;
+.summary-panel {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
-.credit {
-    color: green;
-    font-weight: bold;
+.summary-item-block {
+  background-color: #fff;
+  padding: 15px 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
-.debit {
-    color: red;
-    font-weight: bold;
+.summary-text-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
 }
 
-/* Responsive design for smaller screens */
-@media (max-width: 768px) {
-    .client-info, .transactions-table-container {
-        width: 90%;
-    }
+.summary-text-value {
+  font-size: 18px;
+}
 
-    .transactions-table th, .transactions-table td {
-        padding: 10px;
-        font-size: 14px;
-    }
+.text-credit {
+  color: green;
+}
 
-    .button-group {
-        position: static; /* Buttons stack vertically on smaller screens */
-        flex-direction: column;
-        align-items: flex-end;
-        margin-bottom: 20px;
-    }
+.text-debit {
+  color: red;
+}
+
+.text-net {
+  color: #333;
+}
+
+/* Make only the table scrollable */
+.transaction-table-wrapper {
+  width: 100%;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* Sticky header */
+.transaction-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #007bff; /* Blue header */
+  color: white;
+}
+
+.transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  min-width: 600px;
+}
+
+.transaction-table th,
+.transaction-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+/* Alternate row colors */
+.transaction-table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+.transaction-table tbody tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* Hover effect for clarity */
+.transaction-table tbody tr:hover {
+  background-color: #e6f0ff;
+  cursor: pointer;
+}
+
+/* Credit and debit text coloring */
+.transaction-table .text-credit {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.transaction-table .text-debit {
+  color: #dc3545;
+  font-weight: bold;
 }

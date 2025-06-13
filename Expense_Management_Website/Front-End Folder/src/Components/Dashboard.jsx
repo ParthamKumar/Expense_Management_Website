@@ -128,9 +128,9 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="col p-0 m-0">
-            <div className="p-2 d-flex justify-content-center shadow">
+            {/* <div className="p-2 d-flex justify-content-center shadow">
                 <h4>CB</h4>
-            </div>
+            </div> */}
             <Outlet />
         </div>
       </div>

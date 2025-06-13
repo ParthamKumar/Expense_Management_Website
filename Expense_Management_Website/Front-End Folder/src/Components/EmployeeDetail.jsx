@@ -25,9 +25,9 @@ const EmployeeDetail = () => {
       }
   return (
     <div>
-        <div className="p-2 d-flex justify-content-center shadow">
+        {/* <div className="p-2 d-flex justify-content-center shadow">
             <h4>CB</h4>
-        </div>
+        </div> */}
         <div className='d-flex justify-content-center flex-column align-items-center mt-3'>
             <img src={`http://localhost:3000/Images/`+employee.image} className='emp_det_image'/>
             <div className='d-flex align-items-center flex-column mt-5'>

@@ -141,4 +141,24 @@ router.delete('/deleteClient/:id', async (req, res) => {
     }
 });
 
+// Express route (Node.js backend example)
+router.get('/getClientSummary/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const transactions = await db.query('SELECT transaction_type, amount FROM transactions WHERE client_id = ?', [id]);
+
+    let totalCredit = 0, totalDebit = 0;
+
+    transactions.forEach(({ transaction_type, amount }) => {
+      if (transaction_type === 'credit') totalCredit += amount;
+      if (transaction_type === 'debit') totalDebit += amount;
+    });
+
+    res.json({ totalCredit, totalDebit });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to get summary' });
+  }
+});
+
 export default router;

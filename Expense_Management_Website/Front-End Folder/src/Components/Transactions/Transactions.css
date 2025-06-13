@@ -6,6 +6,8 @@
     background-color: #f9f9f9;
     border-radius: 10px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
 }
 
 .header {
@@ -40,6 +42,8 @@
     gap: 10px;
     margin-bottom: 20px;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 10;
 }
 
 .search-fields input,
@@ -51,6 +55,7 @@
     flex: 1;
     min-width: 150px;
     transition: border-color 0.3s ease;
+    background-color: white;
 }
 
 .search-fields input:focus,
@@ -60,7 +65,6 @@
 }
 
 .search-fields select {
-    background-color: white;
     cursor: pointer;
 }
 
@@ -79,12 +83,19 @@
     background-color: #c82333;
 }
 
+/* Datepicker Popper fix */
+.react-datepicker-popper {
+    z-index: 9999 !important;
+}
+
+/* Transactions Table */
 .transactions-table {
     width: 100%;
     border-collapse: collapse;
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
 .transactions-table th,
@@ -123,7 +134,7 @@
 /* Scrollable Table Body */
 .transactions-table tbody {
     display: block;
-    max-height: 500px; /* Adjust height to show 5 rows */
+    max-height: 500px;
     overflow-y: auto;
 }
 
@@ -134,15 +145,58 @@
     table-layout: fixed;
 }
 
+/* Daily Summary Box Styles */
+.daily-summary-box {
+    display: flex;
+    justify-content: space-around;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.summary-label {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.summary-value.credit {
+    color: #28a745;
+}
+
+.summary-value.debit {
+    color: #dc3545;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .search-fields {
         flex-direction: column;
+        gap: 15px;
     }
 
     .search-fields input,
     .search-fields select,
     .btn-clear {
         width: 100%;
+    }
+
+    .daily-summary-box {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
     }
 }

@@ -2,16 +2,18 @@
 .add-transaction-container {
     width: 50%;
     margin: 0 auto;
-    padding: 20px;
+    padding: 15px;  /* reduced from 20px */
     background-color: #f8f9fa;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;  /* reduced from 8px */
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);  /* reduced from 4px 8px */
+    transform: scale(0.9);  /* this zooms out the entire container */
+    transform-origin: top center;
 }
 
 h2 {
     text-align: center;
-    font-size: 24px;
-    margin-bottom: 20px;
+    font-size: 20px;  /* reduced from 24px */
+    margin-bottom: 15px;  /* reduced from 20px */
     color: #343a40;
 }
 
@@ -21,13 +23,13 @@ form {
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 12px;  /* reduced from 15px */
 }
 
 .form-group label {
-    font-size: 16px;
+    font-size: 14px;  /* reduced from 16px */
     font-weight: 500;
-    margin-bottom: 5px;
+    margin-bottom: 4px;  /* reduced from 5px */
     display: block;
     color: #495057;
 }
@@ -35,56 +37,58 @@ form {
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 10px;
-    font-size: 16px;
+    padding: 8px;  /* reduced from 10px */
+    font-size: 14px;  /* reduced from 16px */
     border: 1px solid #ced4da;
-    border-radius: 5px;
+    border-radius: 4px;  /* reduced from 5px */
     transition: border-color 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    border-color: #80bdff;
-    outline: none;
 }
 
 .radio-group {
     display: flex;
-    gap: 20px;
+    gap: 15px;  /* reduced from 20px */
 }
 
 .radio-group label {
-    font-size: 16px;
+    font-size: 14px;  /* reduced from 16px */
     color: #495057;
 }
 
-.radio-group input {
-    margin-right: 8px;
-}
-
 .submit-btn {
-    padding: 10px;
-    font-size: 16px;
+    padding: 8px;  /* reduced from 10px */
+    font-size: 14px;  /* reduced from 16px */
     background-color: #007bff;
     color: #fff;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;  /* reduced from 5px */
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-.submit-btn:hover {
-    background-color: #0056b3;
+.react-datepicker__month-dropdown,
+.react-datepicker__year-dropdown {
+  max-height: 200px;
+  overflow-y: auto;
 }
+
+.custom-datepicker {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
 
 @media (max-width: 768px) {
     .add-transaction-container {
         width: 90%;
-        padding: 15px;
+        padding: 12px;  /* reduced from 15px */
+        transform: scale(1);  /* remove zoom on mobile */
     }
 
     .radio-group {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;  /* reduced from 10px */
     }
 }

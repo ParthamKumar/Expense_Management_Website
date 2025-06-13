@@ -1,173 +1,257 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './Transactions.css'; // Import CSS
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "./Transactions.css";
 
 const Transactions = () => {
-    const [transactions, setTransactions] = useState([]);
-    const [filteredTransactions, setFilteredTransactions] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [description, setDescription] = useState('');
-    const [transactionType, setTransactionType] = useState(''); // 'credit' or 'debit'
-    const navigate = useNavigate();
+  const [transactions, setTransactions] = useState([]);
+  const [filteredTransactions, setFilteredTransactions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState(new Date("2024-08-01"));
+  const [endDate, setEndDate] = useState(new Date());
+  const [description, setDescription] = useState("");
+  const [transactionType, setTransactionType] = useState("");
+  const [dailySummary, setDailySummary] = useState(null);
+  const navigate = useNavigate();
 
-    // Fetch transactions from the API
-    useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const response = await axios.get('http://localhost:3000/transactions/gettransactions');
-                setTransactions(response.data);
-                setFilteredTransactions(response.data); // Initialize filtered transactions
-            } catch (error) {
-                console.error('Error fetching transactions:', error);
-            }
-        };
-        fetchTransactions();
-    }, []);
-
-    // Handle search by name, date range, description, or transaction type
-    useEffect(() => {
-        let filtered = transactions;
-
-        // Filter by name
-        if (searchTerm) {
-            filtered = filtered.filter(transaction =>
-                transaction.name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-
-        // Filter by date range
-        if (startDate && endDate) {
-            filtered = filtered.filter(transaction => {
-                const transactionDate = new Date(transaction.date);
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                return transactionDate >= start && transactionDate <= end;
-            });
-        }
-
-        // Filter by description
-        if (description) {
-            filtered = filtered.filter(transaction =>
-                transaction.description.toLowerCase().includes(description.toLowerCase())
-            );
-        }
-
-        // Filter by transaction type
-        if (transactionType) {
-            filtered = filtered.filter(transaction =>
-                transaction.transaction_type === transactionType
-            );
-        }
-
-        setFilteredTransactions(filtered);
-    }, [searchTerm, startDate, endDate, description, transactionType, transactions]);
-
-    // Clear all filters
-    const handleClearFilters = () => {
-        setSearchTerm('');
-        setStartDate('');
-        setEndDate('');
-        setDescription('');
-        setTransactionType('');
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/transactions/gettransactions"
+        );
+        setTransactions(response.data);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
     };
+    fetchTransactions();
+  }, []);
 
-    const handleTransactionClick = (id) => {
-        navigate(`/dashboard/transactions/details/${id}`);
-    };
+  useEffect(() => {
+    let filtered = transactions;
 
-    const handleAddTransaction = () => {
-        navigate('/dashboard/transactions/addTransaction');
-    };
+    if (searchTerm) {
+      filtered = filtered.filter((transaction) =>
+        transaction.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
-    // Function to format the date to 'DD MMM YYYY' format
-    const formatDate = (dateString) => {
-        const options = { day: '2-digit', month: 'short', year: 'numeric' };
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-GB', options);
-    };
+    if (startDate && endDate) {
+      filtered = filtered.filter((transaction) => {
+        const transactionDate = new Date(transaction.date);
+        return transactionDate >= startDate && transactionDate <= endDate;
+      });
+    }
 
-    return (
-        <div className="transactions-container">
-            <div className="header">
-                <h4>Daily Transactions</h4>
-                <button className="btn btn-primary add-transaction-btn" onClick={handleAddTransaction}>
-                    Add Transaction
-                </button>
-            </div>
+    if (description) {
+      filtered = filtered.filter((transaction) =>
+        transaction.description.toLowerCase().includes(description.toLowerCase())
+      );
+    }
 
-            {/* Search Field */}
-            <div className="search-fields">
-                <input
-                    type="text"
-                    placeholder="Search by name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <input
-                    type="date"
-                    placeholder="Start Date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                />
-                <input
-                    type="date"
-                    placeholder="End Date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                />
-                <input
-                    type="text"
-                    placeholder="Search by description..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                />
-                <select
-                    value={transactionType}
-                    onChange={(e) => setTransactionType(e.target.value)}
-                >
-                    <option value="">All</option>
-                    <option value="credit">Credit</option>
-                    <option value="debit">Debit</option>
-                </select>
-                <button className="btn btn-clear" onClick={handleClearFilters}>
-                    Clear Filters
-                </button>
-            </div>
+    if (transactionType) {
+      filtered = filtered.filter(
+        (transaction) => transaction.transaction_type === transactionType
+      );
+    }
 
-            {/* Transactions Table */}
-            <table className="transactions-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>Credit (INR)</th>
-                        <th>Debit (INR)</th>
-                        <th>Account</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredTransactions.map(transaction => (
-                        <tr key={transaction.transaction_id} onClick={() => handleTransactionClick(transaction.transaction_id)}>
-                            <td>{transaction.name}</td>
-                            <td>{formatDate(transaction.date)}</td>
-                            <td>{transaction.description}</td>
-                            <td className="credit">
-                                {transaction.transaction_type === 'credit' ? `₹${(transaction.amount).toLocaleString()}` : '-'}
-                            </td>
-                            <td className="debit">
-                                {transaction.transaction_type === 'debit' ? `₹${(transaction.amount ).toLocaleString()}` : '-'}
-                            </td>
-                            <td>{transaction.account}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+    setFilteredTransactions(filtered);
+
+    if (startDate && endDate) {
+      calculateSummary(filtered);
+    } else {
+      setDailySummary(null);
+    }
+  }, [
+    transactions,
+    searchTerm,
+    startDate,
+    endDate,
+    description,
+    transactionType,
+  ]);
+
+  const calculateSummary = (transactions) => {
+    const summary = transactions.reduce(
+      (acc, transaction) => {
+        const amount = parseFloat(transaction.amount);
+        if (transaction.transaction_type === "credit") {
+          acc.totalCredit += amount;
+        } else if (transaction.transaction_type === "debit") {
+          acc.totalDebit += amount;
+        }
+        acc.transactionCount += 1;
+        return acc;
+      },
+      { totalCredit: 0, totalDebit: 0, transactionCount: 0 }
     );
+
+    summary.netAmount = summary.totalCredit - summary.totalDebit;
+    setDailySummary(summary);
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setStartDate(new Date("2024-08-01"));
+    setEndDate(new Date());
+    setDescription("");
+    setTransactionType("");
+    setDailySummary(null);
+  };
+
+  const handleTransactionClick = (id) => {
+    navigate(`/dashboard/transactions/details/${id}`);
+  };
+
+  const handleAddTransaction = () => {
+    navigate("/dashboard/transactions/addTransaction");
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  return (
+    <div className="transactions-container">
+      <div className="header">
+        <h4>Transactions</h4>
+        <button
+          className="btn btn-primary add-transaction-btn"
+          onClick={handleAddTransaction}
+        >
+          Add Transaction
+        </button>
+      </div>
+
+      <div className="search-fields">
+        <input
+          type="text"
+          placeholder="Search by name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+
+        <DatePicker
+          selected={startDate}
+          onChange={(date) => setStartDate(date)}
+          placeholderText="Start Date"
+          dateFormat="dd MMM yyyy"
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
+        />
+
+        <DatePicker
+          selected={endDate}
+          onChange={(date) => setEndDate(date)}
+          placeholderText="End Date"
+          dateFormat="dd MMM yyyy"
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
+        />
+
+        <input
+          type="text"
+          placeholder="Search by description..."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+
+        <select
+          value={transactionType}
+          onChange={(e) => setTransactionType(e.target.value)}
+        >
+          <option value="">All</option>
+          <option value="credit">Credit</option>
+          <option value="debit">Debit</option>
+        </select>
+
+        <button className="btn btn-clear" onClick={handleClearFilters}>
+          Clear Filters
+        </button>
+      </div>
+
+      {dailySummary && (
+        <div className="daily-summary-box">
+          <div className="summary-item">
+            <span className="summary-label">Total Credit:</span>
+            <span className="summary-value credit">
+              ₹{dailySummary.totalCredit.toLocaleString()}
+            </span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">Total Debit:</span>
+            <span className="summary-value debit">
+              ₹{dailySummary.totalDebit.toLocaleString()}
+            </span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">Net Amount:</span>
+            <span
+              className={`summary-value ${
+                dailySummary.netAmount >= 0 ? "credit" : "debit"
+              }`}
+            >
+              ₹{Math.abs(dailySummary.netAmount).toLocaleString()}
+            </span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">Transactions:</span>
+            <span className="summary-value">
+              {dailySummary.transactionCount}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <table className="transactions-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Credit (INR)</th>
+            <th>Debit (INR)</th>
+            <th>Account</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredTransactions.map((transaction) => (
+            <tr
+              key={transaction.transaction_id}
+              onClick={() => handleTransactionClick(transaction.transaction_id)}
+            >
+              <td>
+                {transaction.name} {transaction.id}
+              </td>
+              <td>{formatDate(transaction.date)}</td>
+              <td>{transaction.description}</td>
+              <td className="credit">
+                {transaction.transaction_type === "credit"
+                  ? `₹${transaction.amount.toLocaleString()} (${transaction.transaction_id})`
+                  : "-"}
+              </td>
+              <td className="debit">
+                {transaction.transaction_type === "debit"
+                  ? `₹${transaction.amount.toLocaleString()} (${transaction.transaction_id})`
+                  : "-"}
+              </td>
+              <td>{transaction.account}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 };
 
 export default Transactions;

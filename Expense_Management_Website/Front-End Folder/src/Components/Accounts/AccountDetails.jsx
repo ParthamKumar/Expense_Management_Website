@@ -1,241 +1,238 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './AccountDetails.css'; // Ensure CSS file is imported
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "./AccountDetails.css";
 
 const AccountDetails = () => {
-    const { id } = useParams(); // Get the client id from the URL
-    const navigate = useNavigate();
-    const [client, setClient] = useState(null);
-    const [transactions, setTransactions] = useState([]); // State for all transactions
-    const [filteredTransactions, setFilteredTransactions] = useState([]); // State for filtered transactions
-    const [loadingClient, setLoadingClient] = useState(true);
-    const [loadingTransactions, setLoadingTransactions] = useState(true);
-    const [clientError, setClientError] = useState(null);
-    const [transactionsError, setTransactionsError] = useState(null);
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-    // State for filters
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [description, setDescription] = useState('');
-    const [transactionType, setTransactionType] = useState('');
+  const [client, setClient] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [filteredTransactions, setFilteredTransactions] = useState([]);
 
-    useEffect(() => {
-        // Fetch client details
-        const fetchClientDetails = async () => {
-            try {
-                const clientResponse = await axios.get(`http://localhost:3000/accounts/getClient/${id}`);
-                setClient(clientResponse.data);
-            } catch (err) {
-                setClientError('Error fetching client details');
-            } finally {
-                setLoadingClient(false);
-            }
-        };
+  const [loadingClient, setLoadingClient] = useState(true);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [clientError, setClientError] = useState(null);
+  const [transactionsError, setTransactionsError] = useState(null);
 
-        fetchClientDetails();
-    }, [id]);
+  const [startDate, setStartDate] = useState(new Date("2024-08-01"));
+  const [endDate, setEndDate] = useState(new Date());
+  const [description, setDescription] = useState("");
+  const [transactionType, setTransactionType] = useState("");
 
-    // Fetch client transactions
-    useEffect(() => {
-        const fetchClientTransactions = async () => {
-            try {
-                const transactionsResponse = await axios.get(`http://localhost:3000/accounts/getClientTransactions/${id}`);
-                setTransactions(transactionsResponse.data);
-                setFilteredTransactions(transactionsResponse.data); // Initialize filtered transactions
-            } catch (err) {
-                setTransactionsError('Error fetching client transactions');
-            } finally {
-                setLoadingTransactions(false);
-            }
-        };
+  const [summary, setSummary] = useState({ totalCredit: 0, totalDebit: 0 });
+  const [isClientInfoOpen, setIsClientInfoOpen] = useState(false);
 
-        fetchClientTransactions();
-    }, [id]);
-
-    // Filter transactions on the spot
-    useEffect(() => {
-        let filtered = transactions;
-
-        // Filter by date range
-        if (startDate && endDate) {
-            filtered = filtered.filter(transaction => {
-                const transactionDate = new Date(transaction.date);
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                return transactionDate >= start && transactionDate <= end;
-            });
-        }
-
-        // Filter by description
-        if (description) {
-            filtered = filtered.filter(transaction =>
-                transaction.description.toLowerCase().includes(description.toLowerCase())
-            );
-        }
-
-        // Filter by transaction type
-        if (transactionType) {
-            filtered = filtered.filter(transaction =>
-                transaction.transaction_type === transactionType
-            );
-        }
-
-        setFilteredTransactions(filtered);
-    }, [startDate, endDate, description, transactionType, transactions]);
-
-    // Clear all filters
-    const handleClearFilters = () => {
-        setStartDate('');
-        setEndDate('');
-        setDescription('');
-        setTransactionType('');
+  useEffect(() => {
+    const fetchClientDetails = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:3000/accounts/getClient/${id}`
+        );
+        setClient(res.data);
+      } catch (err) {
+        setClientError("Error fetching client details");
+      } finally {
+        setLoadingClient(false);
+      }
     };
+    fetchClientDetails();
+  }, [id]);
 
-    // Handle delete account
-    const handleDeleteAccount = async () => {
-        if (transactions.length > 0) {
-            alert('Cannot delete account. There are associated transactions.');
-            return;
-        }
-
-        const confirmDelete = window.confirm('Are you sure you want to delete this account?');
-        if (confirmDelete) {
-            try {
-                await axios.delete(`http://localhost:3000/accounts/deleteClient/${id}`);
-                alert('Account deleted successfully!');
-                navigate('/dashboard/accounts'); // Redirect to accounts list
-            } catch (error) {
-                console.error('Error deleting account:', error);
-                alert('Failed to delete account');
-            }
-        }
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:3000/accounts/getClientTransactions/${id}`
+        );
+        setTransactions(res.data);
+        setFilteredTransactions(res.data);
+        calculateSummary(res.data);
+      } catch (err) {
+        setTransactionsError("Error fetching transactions");
+      } finally {
+        setLoadingTransactions(false);
+      }
     };
+    fetchTransactions();
+  }, [id]);
 
-    // Handle edit account
-    const handleEditAccount = () => {
-        navigate(`/dashboard/accounts/editClient/${id}`); // Navigate to edit account page
-    };
+  useEffect(() => {
+    let filtered = transactions;
 
-    // Function to format the date to 'DD MMM YYYY' format
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const day = date.getDate().toString().padStart(2, '0'); // Ensure 2-digit day
-        const month = date.toLocaleString('default', { month: 'short' }); // Get short month name (e.g., Mar)
-        const year = date.getFullYear(); // Get full year (e.g., 2025)
-        return `${day} ${month} ${year}`; // Format as "23 Mar 2025"
-    };
-
-    // Handle click on a transaction row
-    const handleTransactionClick = (transactionId) => {
-        navigate(`/dashboard/transactions/details/${transactionId}`); // Navigate to transaction details page
-    };
-
-    if (loadingClient && loadingTransactions) {
-        return <div>Loading...</div>;
+    if (startDate && endDate) {
+      filtered = filtered.filter(({ date }) => {
+        const txnDate = new Date(date);
+        return txnDate >= startDate && txnDate <= endDate;
+      });
     }
 
-    return (
-        <div className="account-details-container">
-            <h2>Account Details</h2>
+    if (description) {
+      filtered = filtered.filter((t) =>
+        t.description?.toLowerCase().includes(description.toLowerCase())
+      );
+    }
 
-            {/* Buttons for Edit and Delete Account */}
-            <div className="button-group">
-                <button className="btn btn-edit" onClick={handleEditAccount}>
-                    Edit Account
-                </button>
-                <button className="btn btn-delete" onClick={handleDeleteAccount}>
-                    Delete Account
-                </button>
-            </div>
+    if (transactionType) {
+      filtered = filtered.filter((t) => t.transaction_type === transactionType);
+    }
 
-            {clientError && <p>{clientError}</p>}
-            {!loadingClient && client ? (
-                <div className="client-info">
-                    <p><strong>Name:</strong> {client.name}</p>
-                    <p><strong>Email:</strong> {client.email}</p>
-                    <p><strong>Contact:</strong> {client.contact}</p>
-                    <p><strong>Address:</strong> {client.address}</p>
-                    <p><strong>Description:</strong> {client.description ? client.description : "No description available"}</p>
-                </div>
-            ) : (
-                <p>No client details found.</p>
-            )}
+    setFilteredTransactions(filtered);
+    calculateSummary(filtered);
+  }, [startDate, endDate, description, transactionType, transactions]);
 
-            <h3>Transactions</h3>
+  const calculateSummary = (txns) => {
+    let credit = 0,
+      debit = 0;
+    txns.forEach(({ transaction_type, amount }) => {
+      if (transaction_type === "credit") credit += amount;
+      if (transaction_type === "debit") debit += amount;
+    });
+    setSummary({ totalCredit: credit, totalDebit: debit });
+  };
 
-            {/* Search Fields */}
-            <div className="search-fields">
-                <input
-                    type="date"
-                    placeholder="Start Date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                />
-                <input
-                    type="date"
-                    placeholder="End Date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                />
-                <input
-                    type="text"
-                    placeholder="Search by description..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                />
-                <select
-                    value={transactionType}
-                    onChange={(e) => setTransactionType(e.target.value)}
-                >
-                    <option value="">All</option>
-                    <option value="credit">Credit</option>
-                    <option value="debit">Debit</option>
-                </select>
-                <button className="btn-clear" onClick={handleClearFilters}>
-                    Clear Filters
-                </button>
-            </div>
+  const handleClearFilters = () => {
+    setStartDate(new Date("2024-08-01"));
+    setEndDate(new Date());
+    setDescription("");
+    setTransactionType("");
+  };
 
-            {transactionsError && <p>{transactionsError}</p>}
-            {!loadingTransactions && filteredTransactions.length === 0 ? (
-                <p>No transactions found for this client.</p>
-            ) : (
-                <div className="transactions-table-container">
-                    <table className="transactions-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Credit (INR)</th>
-                                <th>Debit (INR)</th>
-                                <th>Account</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredTransactions.map((transaction) => (
-                                <tr 
-                                    key={transaction.transaction_id} 
-                                    onClick={() => handleTransactionClick(transaction.transaction_id)} // Add click handler
-                                    style={{ cursor: 'pointer' }} // Change cursor to pointer
-                                >
-                                    <td>{formatDate(transaction.date)}</td>
-                                    <td>{transaction.description ? transaction.description : "No description"}</td>
-                                    <td className="credit">
-                                        {transaction.transaction_type === 'credit' ? `₹${(transaction.amount).toLocaleString()}` : '-'}
-                                    </td>
-                                    <td className="debit">
-                                        {transaction.transaction_type === 'debit' ? `₹${(transaction.amount).toLocaleString()}` : '-'}
-                                    </td>
-                                    <td>{transaction.account}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+  const handleDeleteAccount = async () => {
+    if (transactions.length > 0) {
+      alert("Cannot delete account. There are associated transactions.");
+      return;
+    }
+
+    if (window.confirm("Are you sure you want to delete this account?")) {
+      try {
+        await axios.delete(`http://localhost:3000/accounts/deleteClient/${id}`);
+        alert("Account deleted successfully!");
+        navigate("/dashboard/accounts");
+      } catch (err) {
+        alert("Failed to delete account");
+      }
+    }
+  };
+
+  const handleEditAccount = () => {
+    navigate(`/dashboard/accounts/editClient/${id}`);
+  };
+
+  const toggleClientInfo = () => {
+    setIsClientInfoOpen(!isClientInfoOpen);
+  };
+
+  const formatDate = (d) => {
+    const date = new Date(d);
+    return `${date.getDate().toString().padStart(2, "0")} ${date.toLocaleString(
+      "default",
+      { month: "short" }
+    )} ${date.getFullYear()}`;
+  };
+
+  const handleTransactionClick = (txnId) => {
+    navigate(`/dashboard/transactions/details/${txnId}`);
+  };
+
+  if (loadingClient || loadingTransactions) return <div>Loading...</div>;
+
+  return (
+    <div className="account-details-wrapper">
+  <h2>Account Details</h2>
+
+  {clientError && <p>{clientError}</p>}
+  {client ? (
+    <div className="client-section">
+      <div className="client-section-header" onClick={toggleClientInfo}>
+        <h3>Client Information</h3>
+        <span className={`arrow-toggle ${isClientInfoOpen ? 'open' : ''}`}>▼</span>
+      </div>
+
+      {isClientInfoOpen && (
+        <div className="client-section-body">
+          <div className="client-data-list">
+            <p><strong>Name:</strong> {client.name}</p>
+            <p><strong>Email:</strong> {client.email}</p>
+            <p><strong>Contact:</strong> {client.contact}</p>
+            <p><strong>Address:</strong> {client.address}</p>
+            <p><strong>Description:</strong> {client.description || "No description available"}</p>
+          </div>
+          <div className="client-action-buttons">
+            <button className="action-btn action-edit" onClick={handleEditAccount}>Edit Account</button>
+            <button className="action-btn action-delete" onClick={handleDeleteAccount}>Delete Account</button>
+          </div>
         </div>
-    );
+      )}
+    </div>
+  ) : (
+    <p>No client details found.</p>
+  )}
+
+  <h3>Transactions</h3>
+
+  <div className="filter-panel">
+    <DatePicker selected={startDate} onChange={(date) => setStartDate(date)} placeholderText="Start Date" dateFormat="dd MMM yyyy" showMonthDropdown showYearDropdown dropdownMode="select" />
+    <DatePicker selected={endDate} onChange={(date) => setEndDate(date)} placeholderText="End Date" dateFormat="dd MMM yyyy" showMonthDropdown showYearDropdown dropdownMode="select" />
+    <input type="text" placeholder="Search by description..." value={description} onChange={(e) => setDescription(e.target.value)} />
+    <select value={transactionType} onChange={(e) => setTransactionType(e.target.value)}>
+      <option value="">All</option>
+      <option value="credit">Credit</option>
+      <option value="debit">Debit</option>
+    </select>
+    <button className="filter-clear-btn" onClick={handleClearFilters}>Clear Filters</button>
+  </div>
+
+  <div className="summary-panel">
+    <div className="summary-item-block">
+      <span className="summary-text-label">Total Credit</span>
+      <span className="summary-text-value text-credit">₹{summary.totalCredit.toLocaleString()}</span>
+    </div>
+    <div className="summary-item-block">
+      <span className="summary-text-label">Total Debit</span>
+      <span className="summary-text-value text-debit">₹{summary.totalDebit.toLocaleString()}</span>
+    </div>
+    <div className="summary-item-block">
+      <span className="summary-text-label">Net</span>
+      <span className="summary-text-value text-net">₹{(summary.totalDebit - summary.totalCredit).toLocaleString()}</span>
+    </div>
+  </div>
+
+  {transactionsError && <p>{transactionsError}</p>}
+  {filteredTransactions.length === 0 ? (
+    <p>No transactions found.</p>
+  ) : (
+    <div className="transaction-table-wrapper">
+      <table className="transaction-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Credit (INR)</th>
+            <th>Debit (INR)</th>
+            <th>Account</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredTransactions.map((txn) => (
+            <tr key={txn.transaction_id} onClick={() => handleTransactionClick(txn.transaction_id)} style={{ cursor: "pointer" }}>
+              <td>{formatDate(txn.date)}</td>
+              <td>{txn.description || "No description"}</td>
+              <td className="text-credit">{txn.transaction_type === "credit" ? `₹${txn.amount.toLocaleString()}` : "-"}</td>
+              <td className="text-debit">{txn.transaction_type === "debit" ? `₹${txn.amount.toLocaleString()}` : "-"}</td>
+              <td>{txn.account}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
+  );
 };
 
 export default AccountDetails;

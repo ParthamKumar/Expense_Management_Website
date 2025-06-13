@@ -37,6 +37,28 @@ router.get('/gettransactions', (req, res) => {
         }
     });
 });
+// router.get('/gettransactions', (req, res) => {
+//     const { startDate, endDate } = req.query;
+//     let query = 'SELECT * FROM transactions';
+//     const queryParams = [];
+
+//     if (startDate && endDate) {
+//         query += ' WHERE DATE(date) BETWEEN ? AND ?';
+//         queryParams.push(startDate, endDate);
+//     }
+
+//     query += ' ORDER BY date DESC';
+
+//     con.query(query, queryParams, (err, results) => {
+//         if (err) {
+//             console.error('Error fetching transactions:', err);
+//             res.status(500).send('Error fetching transactions');
+//         } else {
+//             res.json(results);
+//         }
+//     });
+// });
+
 
 router.get('/searchtransactions', (req, res) => {
     const { name, startDate, endDate, description, transactionType } = req.query;
@@ -147,5 +169,29 @@ router.delete('/deletetransaction/:id', (req, res) => {
         res.json({ message: 'Transaction deleted successfully' });
     });
 });
+
+// Backend: Express route with optional date filtering
+router.get('/gettransactions', (req, res) => {
+    const { startDate, endDate } = req.query;
+    let query = 'SELECT * FROM transactions';
+    const values = [];
+
+    if (startDate && endDate) {
+        query += ' WHERE date BETWEEN ? AND ?';
+        values.push(startDate, endDate);
+    }
+
+    query += ' ORDER BY date DESC';
+
+    con.query(query, values, (err, results) => {
+        if (err) {
+            console.error('Error fetching transactions:', err);
+            res.status(500).send('Error fetching transactions');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
 
 export default router;
