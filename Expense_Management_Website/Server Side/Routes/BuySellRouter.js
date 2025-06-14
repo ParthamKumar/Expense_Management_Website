@@ -35,9 +35,10 @@ router.post('/addBuySellTransaction', async (req, res) => {
       : 0;
     const totalAmount = buyingAmount + contributorsSum;
 
-    conn = await pool.getConnection(); // ✅ FIXED: use pool.getConnection()
+    conn = await pool.getConnection();
     await conn.beginTransaction();
 
+    // INSERT buy record
     const [buyResult] = await conn.query(`
       INSERT INTO buyselltransactions 
       (transaction_type, date, party_id, party_type, party_description, product_id, quantity, rate, unit, buying_amount, contributors_sum, total_amount, buyer_id, buyer_description, buyer_type)
@@ -48,17 +49,18 @@ router.post('/addBuySellTransaction', async (req, res) => {
       buyer_id, buyer_description, buyer_type
     ]);
 
-    const transactionId = buyResult.insertId;
+    const buySellId = buyResult.insertId;
 
+    // INSERT party ledger entry (credit)
     await conn.query(`
-      INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, account)
+      INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, buySellTransactionId)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [
       party_id, party_description, date,
-      'Buy product from ' + party_description,
-      'credit', buyingAmount, 'party'
+      party_description, 'credit', buyingAmount, buySellId
     ]);
 
+    // INSERT contributors (if any)
     for (const c of contributors) {
       const contributorAmount = parseFloat(c.amount);
       if (!c.client_id || isNaN(contributorAmount)) continue;
@@ -66,19 +68,19 @@ router.post('/addBuySellTransaction', async (req, res) => {
       await conn.query(`
         INSERT INTO contributors (transaction_id, client_id, description, amount, type)
         VALUES (?, ?, ?, ?, ?)
-      `, [transactionId, c.client_id, c.description, contributorAmount, c.type]);
+      `, [buySellId, c.client_id, c.description, contributorAmount, c.type]);
 
       await conn.query(`
-        INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, account)
+        INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, buySellTransactionId)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `, [
         c.client_id, c.description, date,
-        `Contributor share for ${party_description}`,
-        c.type, contributorAmount, 'contributor'
+        party_description, c.type, contributorAmount, buySellId
       ]);
     }
 
-    await conn.query(`
+    // INSERT sell record
+    const [sellResult] = await conn.query(`
       INSERT INTO buyselltransactions 
       (transaction_type, date, party_id, party_type, party_description, product_id, quantity, rate, unit, buying_amount, contributors_sum, total_amount, buyer_id, buyer_description, buyer_type)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -88,17 +90,19 @@ router.post('/addBuySellTransaction', async (req, res) => {
       party_id, party_description, party_type
     ]);
 
+    const sellId = sellResult.insertId;
+
+    // INSERT buyer ledger entry (debit)
     await conn.query(`
-      INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, account)
+      INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, buySellTransactionId)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [
       buyer_id, buyer_description, date,
-      'Sell to ' + buyer_description,
-      'debit', totalAmount, 'buyer'
+      buyer_description, 'debit', totalAmount, sellId
     ]);
 
     await conn.commit();
-    res.status(200).json({ message: 'Transaction completed successfully', transactionId });
+    res.status(200).json({ message: 'Transaction completed successfully', buyTransactionId: buySellId, sellTransactionId: sellId });
 
   } catch (err) {
     if (conn) await conn.rollback();
@@ -108,8 +112,69 @@ router.post('/addBuySellTransaction', async (req, res) => {
       error: err.message || JSON.stringify(err)
     });
   } finally {
-    if (conn) conn.release(); // ✅ Always release pool connection
+    if (conn) conn.release();
   }
 });
+
+router.get('/gettransactions', (req, res) => {
+  const query = `
+    SELECT 
+      b.*,
+      party.name AS party_name,
+      buyer.name AS buyer_name,
+      products.name AS product_name
+    FROM buyselltransactions b
+    LEFT JOIN clients party ON b.party_id = party.id
+    LEFT JOIN clients buyer ON b.buyer_id = buyer.id
+    LEFT JOIN products ON b.product_id = products.id
+    ORDER BY b.date DESC
+  `;
+
+  con.query(query, (err, transactions) => {
+    if (err) {
+      console.error('Error fetching transactions:', err);
+      return res.status(500).send('Error fetching transactions');
+    }
+
+    // Extract all transaction IDs
+    const transactionIds = transactions.map(tx => tx.id);
+    if (transactionIds.length === 0) return res.json([]);
+
+    // Query contributors with client names
+    const contribQuery = `
+      SELECT 
+        c.*,
+        clients.name AS contributor_name
+      FROM contributors c
+      LEFT JOIN clients ON c.client_id = clients.id
+      WHERE c.transaction_id IN (?)
+    `;
+
+    con.query(contribQuery, [transactionIds], (err, contributors) => {
+      if (err) {
+        console.error('Error fetching contributors:', err);
+        return res.status(500).send('Error fetching contributors');
+      }
+
+      // Group contributors by transaction_id
+      const groupedContributors = {};
+      contributors.forEach(c => {
+        if (!groupedContributors[c.transaction_id]) {
+          groupedContributors[c.transaction_id] = [];
+        }
+        groupedContributors[c.transaction_id].push(c);
+      });
+
+      // Attach contributors to each transaction
+      const enhancedTransactions = transactions.map(tx => {
+        tx.contributors = groupedContributors[tx.id] || [];
+        return tx;
+      });
+
+      res.json(enhancedTransactions);
+    });
+  });
+});
+
 
 export default router;

@@ -80,7 +80,7 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
     setFormData(prev => ({ ...prev, contributors: updated }));
   };
 
- const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
   try {
     const party = clients.find(c => c.name === formData.partyName);
@@ -119,19 +119,17 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
       }).filter(c => c.client_id !== null)
     };
 
-    // ✅ Log payload for Postman testing
-    console.log("🚀 Form Payload:", JSON.stringify(payload, null, 2));
-
     const res = await axios.post('http://localhost:3000/buysell/addBuySellTransaction', payload);
 
     alert('Transaction saved successfully!');
-    onSubmit(res.data);
     navigate('/dashboard/buysell');
+    if (onSubmit) onSubmit(res.data);
   } catch (err) {
     console.error('Error saving transaction:', err);
     alert('Failed to save transaction.');
   }
 };
+
 
   return (
     <div className="form-overlay">

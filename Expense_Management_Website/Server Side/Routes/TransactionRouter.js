@@ -6,27 +6,31 @@ import { con, pool } from "../utils/db.js";
 const router = express.Router();
 
 router.post('/add', (req, res) => {
-    // console.log('Transaction data:', req.body); 
-    const { client_id, name, date, description, transaction_type, amount, account } = req.body;
+    const { client_id, name, date, description, transaction_type, amount, buySellTransactionId } = req.body;
 
-    // Validate input data (optional but recommended)
-    if (!client_id || !name || !date || !transaction_type || !amount || !account) {
+    // Validate required fields
+    if (!client_id || !name || !date || !transaction_type || !amount) {
         return res.status(400).send('Missing required fields');
     }
 
     const query = `
-        INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, account) 
+        INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, buySellTransactionId) 
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    con.query(query, [client_id, name, date, description, transaction_type, amount, account], (err, result) => {
-        if (err) {
-            console.error('Error adding transaction:', err);
-            return res.status(500).send('Error adding transaction');
+    con.query(
+        query,
+        [client_id, name, date, description || null, transaction_type, amount, buySellTransactionId || null],
+        (err, result) => {
+            if (err) {
+                console.error('Error adding transaction:', err);
+                return res.status(500).send('Error adding transaction');
+            }
+            res.status(200).send({ message: 'Transaction added successfully' });
         }
-        res.status(200).send({ message: 'Transaction added successfully' });
-    });
+    );
 });
+
 
 // router.post('/addFullTransaction', async (req, res) => {
 //   const conn = await pool.getConnection();
@@ -228,7 +232,6 @@ router.get('/searchtransactions', (req, res) => {
 router.get('/gettransaction/:id', (req, res) => {
     const transactionId = req.params.id;
 
-    // Query to fetch transaction details along with client information
     const query = `
         SELECT 
             t.transaction_id,
@@ -238,7 +241,7 @@ router.get('/gettransaction/:id', (req, res) => {
             t.description,
             t.transaction_type,
             t.amount,
-            t.account,
+            t.buySellTransactionId,
             c.name AS client_name,
             c.email AS client_email
         FROM transactions t
@@ -246,7 +249,6 @@ router.get('/gettransaction/:id', (req, res) => {
         WHERE t.transaction_id = ?
     `;
 
-    // Execute the query
     con.query(query, [transactionId], (error, results) => {
         if (error) {
             console.error('Error executing query:', error);
@@ -257,7 +259,6 @@ router.get('/gettransaction/:id', (req, res) => {
             return res.status(404).json({ message: 'Transaction not found' });
         }
 
-        // Return the transaction details with client information
         const transaction = results[0];
         res.json({
             transaction_id: transaction.transaction_id,
@@ -268,6 +269,55 @@ router.get('/gettransaction/:id', (req, res) => {
             transaction_type: transaction.transaction_type,
             amount: transaction.amount,
             account: transaction.account,
+            buySellTransactionId: transaction.buySellTransactionId,
+            client: {
+                name: transaction.client_name,
+                email: transaction.client_email
+            }
+        });
+    });
+});
+
+router.get('/gettransaction/:id', (req, res) => {
+    const transactionId = req.params.id;
+
+    const query = `
+        SELECT 
+            t.transaction_id,
+            t.client_id,
+            t.name,
+            t.date,
+            t.description,
+            t.transaction_type,
+            t.amount,
+            t.buySellTransactionId,
+            c.name AS client_name,
+            c.email AS client_email
+        FROM transactions t
+        INNER JOIN clients c ON t.client_id = c.id
+        WHERE t.transaction_id = ?
+    `;
+
+    con.query(query, [transactionId], (error, results) => {
+        if (error) {
+            console.error('Error executing query:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+
+        const transaction = results[0];
+        res.json({
+            transaction_id: transaction.transaction_id,
+            client_id: transaction.client_id,
+            name: transaction.name,
+            date: transaction.date,
+            description: transaction.description,
+            transaction_type: transaction.transaction_type,
+            amount: transaction.amount,
+            buySellTransactionId: transaction.buySellTransactionId,
             client: {
                 name: transaction.client_name,
                 email: transaction.client_email

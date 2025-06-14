@@ -1,199 +1,379 @@
+/* Main Container */
 .buy-sell-container {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.btn.buy {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn.buy:hover {
+  background-color: #218838;
+}
+
+.btn.sell {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn.sell:hover {
+  background-color: #c82333;
+}
+
+/* Section Heading */
+.section-heading {
+  color: #343a40;
+  margin-bottom: 25px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* Cards Container - Scrollable */
+.transaction-cards-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.transaction-cards-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.transaction-cards-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.transaction-cards-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.transaction-cards-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Cards Grid */
+.transaction-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 15px;
+}
+
+/* Transaction Card */
+.transaction-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  border-left: 4px solid #007bff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  font-size: 12px;
+  position: relative;
+  max-width: 350px;
+}
+
+.transaction-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Card Actions */
+.card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.transaction-card:hover .card-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+  font-size: 12px;
+}
+
+.edit-btn:hover {
+  background-color: #e3f2fd;
+}
+
+.delete-btn:hover {
+  background-color: #ffebee;
+}
+
+/* Card Header */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+  padding-right: 60px; /* Space for action buttons */
+}
+
+.transaction-type .buy-label {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.date-section {
+  text-align: right;
+}
+
+.date-label {
+  display: block;
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.date-value {
+  font-weight: 700;
+  color: #343a40;
+  font-size: 13px;
+}
+
+/* Party Information */
+.party-info {
+  margin-bottom: 12px;
+}
+
+.party-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 12px;
+}
+
+.value {
+  color: #343a40;
+  font-weight: 500;
+}
+
+.type-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.type-credit {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.type-debit {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Tables */
+.product-table,
+.contributors-table,
+.selling-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+  font-size: 11px;
+}
+
+.product-table th,
+.contributors-table th,
+.selling-table th {
+  background-color: #f8f9fa;
+  padding: 6px 4px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 10px;
+}
+
+.product-table td,
+.contributors-table td,
+.selling-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid #e9ecef;
+  color: #343a40;
+}
+
+.product-table tbody tr:hover,
+.contributors-table tbody tr:hover,
+.selling-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Section Titles */
+.section-title {
+  margin: 15px 0 8px 0;
+  color: #495057;
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 4px;
+}
+
+/* Contributors Section */
+.contributors-section {
+  margin-bottom: 12px;
+}
+
+.no-contributors {
+  color: #6c757d;
+  font-style: italic;
+  margin: 10px 0;
+  font-size: 12px;
+}
+
+.contributors-total {
+  text-align: right;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #dee2e6;
+  font-weight: 600;
+  color: #343a40;
+}
+
+/* Grand Total */
+.grand-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  border-left: 3px solid #28a745;
+}
+
+.total-label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 13px;
+}
+
+.total-amount {
+  font-weight: 700;
+  color: #28a745;
+  font-size: 14px;
+}
+
+/* Selling Section */
+.selling-section {
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid #e9ecef;
+  background-color: #fff3cd;
+  margin: 15px -15px -15px -15px;
+  padding: 12px 15px 15px 15px;
+  border-radius: 0 0 10px 10px;
+}
+
+.selling-section .section-title {
+  color: #856404;
+  margin-top: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .transaction-cards-grid {
+    grid-template-columns: 1fr;
   }
   
-  .action-tabs {
-    margin-bottom: 2rem;
+  .transaction-card {
+    font-size: 11px;
+    max-width: none;
   }
   
-  .action-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding-right: 50px;
   }
   
-  .new-transaction {
-    padding: 0.8rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  .party-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .buy-sell-container {
+    padding: 12px;
   }
   
-  .new-transaction.buy {
-    background-color: #38a169;
+  .transaction-card {
+    padding: 12px;
+    font-size: 10px;
   }
   
-  .new-transaction.sell {
-    background-color: #e53e3e;
+  .product-table th,
+  .contributors-table th,
+  .selling-table th,
+  .product-table td,
+  .contributors-table td,
+  .selling-table td {
+    padding: 4px 3px;
+    font-size: 9px;
   }
   
-  .new-transaction:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
+  .action-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
   }
   
-  .transaction-history h3 {
-    color: #2d3748;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid #e2e8f0;
-    font-size: 1.25rem;
+  .card-header {
+    padding-right: 45px;
   }
-  
-  .history-table {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  
-  .table-header {
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    gap: 1rem;
-    padding: 1rem;
-    background-color: #4299e1;
-    color: white;
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-  
-  .table-header span {
-    padding: 0.5rem;
-    text-align: left;
-  }
-  
-  .table-row {
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    gap: 1rem;
-    padding: 1rem;
-    background-color: #fff;
-    border-bottom: 1px solid #e2e8f0;
-    transition: background-color 0.2s ease;
-    font-size: 0.9rem;
-  }
-  
-  .table-row:last-child {
-    border-bottom: none;
-  }
-  
-  .table-row:hover {
-    background-color: #f8fafc;
-  }
-  
-  .table-row.buy {
-    border-left: 4px solid #38a169;
-  }
-  
-  .table-row.sell {
-    border-left: 4px solid #e53e3e;
-  }
-  
-  .table-row span {
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  .type-indicator {
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  
-  .total {
-    font-weight: 600;
-    color: #2b6cb0;
-  }
-  
-  /* Currency values styling */
-  .table-row span:nth-child(6),
-  .table-row span:nth-child(8),
-  .table-row span:nth-child(9) {
-    font-family: 'Courier New', Courier, monospace;
-    justify-content: flex-end;
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 1200px) {
-    .table-header,
-    .table-row {
-      grid-template-columns: repeat(5, 1fr);
-    }
-  
-    .table-header span:nth-child(n+6),
-    .table-row span:nth-child(n+6) {
-      display: none;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .buy-sell-container {
-      margin: 1rem;
-      padding: 15px;
-    }
-  
-    .action-buttons {
-      flex-direction: column;
-    }
-  
-    .new-transaction {
-      justify-content: center;
-      width: 100%;
-    }
-  
-    .table-header,
-    .table-row {
-      grid-template-columns: 1fr;
-      padding: 0.5rem;
-    }
-  
-    .table-header span,
-    .table-row span {
-      display: none;
-      padding: 0.5rem;
-    }
-  
-    .table-header span:first-child,
-    .table-row span:first-child {
-      display: flex;
-    }
-  
-    .table-row {
-      position: relative;
-      padding-left: 1rem;
-    }
-  
-    .table-row::before {
-      content: attr(data-type);
-      position: absolute;
-      right: 1rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: white;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-    }
-  
-    .table-row.buy::before {
-      background-color: #38a169;
-    }
-  
-    .table-row.sell::before {
-      background-color: #e53e3e;
-    }
-  }
+}

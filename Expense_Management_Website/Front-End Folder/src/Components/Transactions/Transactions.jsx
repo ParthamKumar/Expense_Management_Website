@@ -36,40 +36,40 @@ const Transactions = () => {
   }, []);
 
   // Apply filters when filters or transactions change
-  useEffect(() => {
-    let filtered = transactions;
+useEffect(() => {
+  let filtered = transactions.filter(t => t.buySellTransactionId == null); // ✅ Exclude linked transactions
 
-    if (searchTerm) {
-      filtered = filtered.filter((t) =>
-        t.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+  if (searchTerm) {
+    filtered = filtered.filter((t) =>
+      t.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
 
-    if (startDate && endDate) {
-      filtered = filtered.filter((t) => {
-        const txDate = new Date(t.date).toISOString().split("T")[0];
-        const start = startDate.toISOString().split("T")[0];
-        const end = endDate.toISOString().split("T")[0];
-        return txDate >= start && txDate <= end;
-      });
-    }
+  if (startDate && endDate) {
+    filtered = filtered.filter((t) => {
+      const txDate = new Date(t.date).toISOString().split("T")[0];
+      const start = startDate.toISOString().split("T")[0];
+      const end = endDate.toISOString().split("T")[0];
+      return txDate >= start && txDate <= end;
+    });
+  }
 
-    if (description) {
-      filtered = filtered.filter((t) =>
-        t.description.toLowerCase().includes(description.toLowerCase())
-      );
-    }
+  if (description) {
+    filtered = filtered.filter((t) =>
+      t.description.toLowerCase().includes(description.toLowerCase())
+    );
+  }
 
-    if (transactionType) {
-      filtered = filtered.filter((t) => t.transaction_type === transactionType);
-    }
+  if (transactionType) {
+    filtered = filtered.filter((t) => t.transaction_type === transactionType);
+  }
 
-    setFilteredTransactions(filtered);
+  setFilteredTransactions(filtered);
 
-    // Update "select all" checkbox based on current selection
-    const allVisibleSelected = filtered.every(t => selectedTransactions.has(t.transaction_id));
-    setSelectAll(allVisibleSelected);
-  }, [transactions, searchTerm, startDate, endDate, description, transactionType, selectedTransactions]);
+  const allVisibleSelected = filtered.every(t => selectedTransactions.has(t.transaction_id));
+  setSelectAll(allVisibleSelected);
+}, [transactions, searchTerm, startDate, endDate, description, transactionType, selectedTransactions]);
+
 
   // Recalculate summary based on selected items
   useEffect(() => {
@@ -229,7 +229,7 @@ const Transactions = () => {
             <th>Description</th>
             <th>Credit (INR)</th>
             <th>Debit (INR)</th>
-            <th>Account</th>
+            {/* <th>Account</th> */}
             <th style={{ width: "40px", textAlign: "right" }}>
               <input type="checkbox" checked={selectAll} onChange={handleSelectAll} />
             </th>
@@ -251,7 +251,7 @@ const Transactions = () => {
     ? `₹${t.amount.toLocaleString()} (${t.transaction_id})`
     : "-"}
 </td>
-              <td onClick={() => handleTransactionClick(t.transaction_id)}>{t.account}</td>
+              {/* <td onClick={() => handleTransactionClick(t.transaction_id)}>{t.account}</td> */}
               <td style={{ textAlign: "right" }}>
                 <input
                   type="checkbox"
