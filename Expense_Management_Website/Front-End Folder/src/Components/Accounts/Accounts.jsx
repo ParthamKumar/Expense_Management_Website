@@ -5,16 +5,17 @@ import './Accounts.css';
 
 const Accounts = () => {
     const [clients, setClients] = useState([]);
-    const [loading, setLoading] = useState(true); // Loading state
-    const [error, setError] = useState(null); // Error state
+    const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    // Fetch clients data from backend API
     useEffect(() => {
         const fetchClients = async () => {
             try {
                 const response = await axios.get('http://localhost:3000/accounts/getClients');
-                setClients(response.data);
+                const sortedClients = response.data.sort((a, b) => a.name.localeCompare(b.name)); // Alphabetical sort
+                setClients(sortedClients);
                 setLoading(false);
             } catch (err) {
                 setError('Failed to load clients');
@@ -25,7 +26,7 @@ const Accounts = () => {
     }, []);
 
     const handleClientClick = (id) => {
-        navigate(`/dashboard/accounts/details/${id}`); // Navigate to AccountDetails component with client id
+        navigate(`/dashboard/accounts/details/${id}`);
     };
 
     const handleAddClient = () => {
@@ -42,13 +43,12 @@ const Accounts = () => {
         }).catch(err => console.log(err));
     };
 
-    if (loading) {
-        return <p>Loading clients...</p>;
-    }
+    const filteredClients = clients.filter(client =>
+        client.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-    if (error) {
-        return <p>{error}</p>;
-    }
+    if (loading) return <p>Loading clients...</p>;
+    if (error) return <p>{error}</p>;
 
     return (
         <div className="accounts-container">
@@ -56,8 +56,17 @@ const Accounts = () => {
                 <h4>Accounts</h4>
                 <button className="btn btn-primary add-client-btn" onClick={handleAddClient}>Add Account</button>
             </div>
+
+            <input
+                type="text"
+                placeholder="Search clients..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-box"
+            />
+
             <div className="clients-list">
-                {clients.map(client => (
+                {filteredClients.map(client => (
                     <div className="client-card" key={client.id} onClick={() => handleClientClick(client.id)}>
                         <h5>{client.name}</h5>
                         <p>Email: {client.email}</p>

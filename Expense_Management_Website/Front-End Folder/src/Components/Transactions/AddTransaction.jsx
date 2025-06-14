@@ -172,32 +172,7 @@ const AddTransaction = () => {
                             ? '(Amount Coming In)' 
                             : '(Amount Going Out From)'}
                     </p>
-                    <label>Account</label>
-
-                    <div>
-                        <select 
-                            value={selectedAccount} 
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                if (value === '__custom__') {
-                                    setUseCustomAccount(true);
-                                    setSelectedAccount('--');
-                                } else {
-                                    setUseCustomAccount(false);
-                                    setSelectedAccount(value);
-                                }
-                            }} 
-                            disabled={useCustomAccount}
-                        >
-                            <option value="--">--</option>
-                            {accounts.map((account) => (
-                                <option key={account.id} value={account.name}>
-                                    {account.name}
-                                </option>
-                            ))}
-                            <option value="__custom__">Other (Enter manually)</option>
-                        </select>
-                    </div>
+                  
 
                     {useCustomAccount && (
                         <input

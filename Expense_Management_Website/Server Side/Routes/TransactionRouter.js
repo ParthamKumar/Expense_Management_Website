@@ -326,6 +326,52 @@ router.get('/gettransaction/:id', (req, res) => {
     });
 });
 
+// routes/transactions.js
+router.put('/updatetransaction/:transaction_id', async (req, res) => {
+  const { transaction_id } = req.params;
+  const {
+    name,
+    date,
+    description = '',
+    transaction_type,
+    amount
+    // account — removed because it does not exist in DB
+  } = req.body;
+
+  if (!name || !date || !transaction_type || amount == null) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  try {
+    const query = `
+      UPDATE transactions
+      SET name=?, date=?, description=?, transaction_type=?, amount=?
+      WHERE transaction_id=?
+    `;
+    const values = [
+      name,
+      new Date(date),
+      description,
+      transaction_type.toLowerCase(),
+      amount,
+      transaction_id
+    ];
+
+    const [result] = await pool.execute(query, values);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    res.json({ message: 'Transaction updated successfully' });
+  } catch (err) {
+    console.error('Update error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+
 // DELETE transaction by ID
 router.delete('/deletetransaction/:id', (req, res) => {
     const transactionId = req.params.id;

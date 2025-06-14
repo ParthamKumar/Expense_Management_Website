@@ -24,8 +24,8 @@ router.post('/addClient', (req, res) => {
 
 // Get all clients
 router.get('/getClients', (req, res) => {
-    const query = 'SELECT * FROM clients';
-    
+    const query = 'SELECT * FROM clients ORDER BY name ASC'; // Alphabetical sort in SQL
+
     con.query(query, (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'Error fetching clients', error: err });
@@ -33,6 +33,7 @@ router.get('/getClients', (req, res) => {
         res.status(200).json(results);
     });
 });
+
 
 // Get specific client details by ID
 router.get('/getClient/:id', (req, res) => {
