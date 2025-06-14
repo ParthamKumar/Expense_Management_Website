@@ -17,6 +17,8 @@ import PrivateRoute from './Components/PrivateRoute'
 import Accounts from './Components/Accounts/Accounts'
 import AddAccount from './Components/Accounts/AddAccount'
 import AccountDetails from './Components/Accounts/AccountDetails'
+import EditClient from './Components/Accounts/EditClient'
+
 import Transactions from './Components/Transactions/Transactions'
 import AddTransaction from './Components/Transactions/AddTransaction'
 import TransactionDetails from './Components/Transactions/TransactionDetails'
@@ -47,6 +49,8 @@ function App() {
         <Route path='/dashboard/accounts' element={<Accounts />}></Route>
         <Route path='/dashboard/accounts/addAccount' element={<AddAccount />}></Route>
         <Route path='/dashboard/accounts/details/:id' element={<AccountDetails />}></Route>
+        <Route path="/dashboard/accounts/editClient/:id" element={<EditClient />} />
+
         <Route path='/dashboard/transactions' element={<Transactions />}></Route>
         <Route path='/dashboard/transactions/addTransaction' element={<AddTransaction />}></Route>
         <Route path='/dashboard/transactions/details/:id' element={<TransactionDetails />}></Route>

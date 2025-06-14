@@ -1,0 +1,26 @@
+.edit-client-form {
+  max-width: 500px;
+  margin: auto;
+}
+
+.edit-client-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-client-form input,
+.edit-client-form textarea {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.edit-client-form button {
+  padding: 10px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}

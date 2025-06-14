@@ -144,6 +144,28 @@ router.delete('/deleteClient/:id', async (req, res) => {
     }
 });
 
+router.put('/updateClient/:id', async (req, res) => {
+  const clientId = req.params.id;
+  const { name, email, contact, address, description } = req.body;
+
+  try {
+    const result = await con.query(
+      'UPDATE clients SET name = ?, email = ?, contact = ?, address = ?, description = ? WHERE id = ?',
+      [name, email, contact, address, description, clientId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
+
+    res.json({ message: 'Client updated successfully' });
+  } catch (error) {
+    console.error('Error updating client:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 // Express route (Node.js backend example)
 router.get('/getClientSummary/:id', async (req, res) => {
   try {

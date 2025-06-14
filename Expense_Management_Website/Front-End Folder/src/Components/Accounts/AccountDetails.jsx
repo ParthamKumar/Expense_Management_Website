@@ -118,9 +118,9 @@ const AccountDetails = () => {
     }
   };
 
-  const handleEditAccount = () => {
-    navigate(`/dashboard/accounts/editClient/${id}`);
-  };
+const handleEditAccount = () => {
+  navigate(`/dashboard/accounts/editClient/${id}`);
+};
 
   const toggleClientInfo = () => {
     setIsClientInfoOpen(!isClientInfoOpen);
@@ -162,6 +162,7 @@ const AccountDetails = () => {
         : [...prev, txnId]
     );
   };
+  
 
   const isAllFilteredSelected = filteredTransactions.every((t) =>
     selectedTransactionIds.includes(t.transaction_id)
@@ -177,7 +178,7 @@ const AccountDetails = () => {
       {client && (
         <div className="client-section">
           <div className="client-section-header" onClick={toggleClientInfo}>
-            <h3>Client Information</h3>
+            <h3><strong> {client.name}</strong></h3>
             <span className={`arrow-toggle ${isClientInfoOpen ? "open" : ""}`}>▼</span>
           </div>
 
@@ -190,11 +191,13 @@ const AccountDetails = () => {
                 <p><strong>Address:</strong> {client.address}</p>
                 <p><strong>Description:</strong> {client.description || "No description available"}</p>
               </div>
-              <div className="client-action-buttons">
-                <button className="action-btn action-edit" onClick={handleEditAccount}>Edit Account</button>
-                <button className="action-btn action-delete" onClick={handleDeleteAccount}>Delete Account</button>
-              </div>
+              <div className="buttons">
+  <button onClick={handleDeleteAccount}>Delete</button>
+  <button onClick={handleEditAccount}>Edit</button>
+</div>
+
             </div>
+            
           )}
         </div>
       )}
