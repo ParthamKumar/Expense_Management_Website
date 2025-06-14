@@ -5,10 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-
-const BuySellForm = ({ type, onClose, onSubmit }) => {
+const BuySellForm = ({ type, onClose, onSubmit, editData }) => {
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -28,6 +28,70 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
     contributorsSum: 0,
     buyingAmount: 0
   });
+
+  // Initialize form data when component mounts or editData changes
+  useEffect(() => {
+    if (editData) {
+      setIsEditing(true);
+      
+      // Find client names from IDs
+      const getClientNameById = (clientId) => {
+        const client = clients.find(c => c.id === clientId);
+        return client ? client.name : '';
+      };
+
+      const getProductNameById = (productId) => {
+        const product = products.find(p => p.id === productId);
+        return product ? product.name : '';
+      };
+
+      // Prefill form with existing data
+      setFormData({
+        date: editData.date || new Date().toISOString().split('T')[0],
+        partyName: editData.party_name || '',
+        partyDescription: editData.party_description || '',
+        partyType: editData.party_type || 'credit',
+        productName: editData.product_name || '',
+        quantity: editData.quantity || '',
+        rate: editData.rate || '',
+        unit: editData.unit || '40kg',
+        contributors: editData.contributors && editData.contributors.length > 0 
+          ? editData.contributors.map(con => ({
+              name: con.contributor_name || con.client_name || '',
+              description: con.description || '',
+              amount: con.amount || '',
+              type: con.type || 'credit'
+            }))
+          : [{ name: '', description: '', amount: '', type: 'credit' }],
+        buyerName: editData.buyer_name || '',
+        buyerDescription: editData.buyer_description || '',
+        buyerType: editData.buyer_type || 'debit',
+        totalAmount: editData.total_amount || 0,
+        contributorsSum: editData.contributors_sum || 0,
+        buyingAmount: editData.buying_amount || 0
+      });
+    } else {
+      setIsEditing(false);
+      // Reset form for new transaction
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        partyName: '',
+        partyDescription: '',
+        partyType: 'credit',
+        productName: '',
+        quantity: '',
+        rate: '',
+        unit: '40kg',
+        contributors: [{ name: '', description: '', amount: '', type: 'credit' }],
+        buyerName: '',
+        buyerDescription: '',
+        buyerType: 'debit',
+        totalAmount: 0,
+        contributorsSum: 0,
+        buyingAmount: 0
+      });
+    }
+  }, [editData, clients, products]);
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -122,14 +186,22 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
         }).filter(c => c.client_id !== null)
       };
 
-      const res = await axios.post('http://localhost:3000/buysell/addBuySellTransaction', payload);
+      let res;
+      if (isEditing && editData) {
+        // Update existing transaction
+        res = await axios.put(`http://localhost:3000/buysell/updateBuySellTransaction/${editData.id}`, payload);
+        alert('Transaction updated successfully!');
+      } else {
+        // Create new transaction
+        res = await axios.post('http://localhost:3000/buysell/addBuySellTransaction', payload);
+        alert('Transaction saved successfully!');
+      }
 
-      alert('Transaction saved successfully!');
       navigate('/dashboard/buysell');
       if (onSubmit) onSubmit(res.data);
     } catch (err) {
       console.error('Error saving transaction:', err);
-      alert('Failed to save transaction.');
+      alert(`Failed to ${isEditing ? 'update' : 'save'} transaction.`);
     }
   };
 
@@ -137,7 +209,7 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
     <div className="form-overlay">
       <div className={`buy-sell-form ${type}`}>
         <div className="form-header">
-          <h2>{type.toUpperCase()} FORM</h2>
+          <h2>{isEditing ? `EDIT ${type.toUpperCase()} FORM` : `${type.toUpperCase()} FORM`}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
@@ -151,21 +223,20 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
               <div className="input-group">
                 <label>Date*</label>
                 <DatePicker
-  selected={formData.date ? new Date(formData.date) : null}
-  onChange={(date) =>
-    setFormData((prev) => ({
-      ...prev,
-      date: date.toISOString().split('T')[0]  // Saving as "YYYY-MM-DD"
-    }))
-  }
-  dateFormat="dd-MM-yyyy"
-  showMonthDropdown
-  showYearDropdown
-  dropdownMode="select"
-  className="custom-datepicker"
-  required
-/>
-
+                  selected={formData.date ? new Date(formData.date) : null}
+                  onChange={(date) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      date: date.toISOString().split('T')[0]  // Saving as "YYYY-MM-DD"
+                    }))
+                  }
+                  dateFormat="dd-MM-yyyy"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  className="custom-datepicker"
+                  required
+                />
               </div>
 
               <div className="input-group">
@@ -346,7 +417,9 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
 
           <div className="form-actions">
             <button type="button" className="btn cancel" onClick={onClose}>Cancel</button>
-            <button type="submit" className={`btn submit ${type}`}>Confirm {type.toUpperCase()}</button>
+            <button type="submit" className={`btn submit ${type}`}>
+              {isEditing ? `Update ${type.toUpperCase()}` : `Confirm ${type.toUpperCase()}`}
+            </button>
           </div>
         </form>
       </div>

@@ -7,6 +7,7 @@ const BuySell = () => {
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState('buy');
   const [combinedTransactions, setCombinedTransactions] = useState([]);
+  const [editData, setEditData] = useState(null);
 
   useEffect(() => {
     loadTransactions();
@@ -48,11 +49,19 @@ const BuySell = () => {
 
   const handleAction = (type) => {
     setFormType(type);
+    setEditData(null);
+    setShowForm(true);
+  };
+
+  const handleEdit = (transaction, type) => {
+    setFormType(type);
+    setEditData(transaction);
     setShowForm(true);
   };
 
   const handleFormSubmit = () => {
     setShowForm(false);
+    setEditData(null);
     loadTransactions();
   };
 
@@ -80,8 +89,12 @@ const BuySell = () => {
       {showForm && (
         <BuySellForm
           type={formType}
-          onClose={() => setShowForm(false)}
+          onClose={() => {
+            setShowForm(false);
+            setEditData(null);
+          }}
           onSubmit={handleFormSubmit}
+          editData={editData}
         />
       )}
 
@@ -95,7 +108,11 @@ const BuySell = () => {
           return (
             <div key={idx} className="transaction-card">
               <div className="card-actions">
-                <button className="action-btn edit-btn" title="Edit Transaction">
+                <button
+                  className="action-btn edit-btn"
+                  title="Edit Buy Transaction"
+                  onClick={() => handleEdit(buy, 'buy')}
+                >
                   ✏️
                 </button>
                 <button
@@ -183,7 +200,18 @@ const BuySell = () => {
 
               {sell && (
                 <div className="selling-section">
-                  <h4 className="section-title">Selling</h4>
+                  <div className="sell-header">
+                    <h4 className="section-title">Selling</h4>
+                    <div className="sell-actions">
+                      <button
+                        className="action-btn edit-btn"
+                        title="Edit Sell Transaction"
+                        onClick={() => handleEdit(sell, 'sell')}
+                      >
+                        ✏️
+                      </button>
+                    </div>
+                  </div>
                   <table className="selling-table">
                     <thead>
                       <tr>

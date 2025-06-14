@@ -175,6 +175,180 @@ router.get('/gettransactions', (req, res) => {
     });
   });
 });
+router.put('/updateBuySellTransaction/:id', async (req, res) => {
+  let conn;
+
+  try {
+    const transactionId = req.params.id;
+    const {
+      party_id,
+      party_type,
+      party_description,
+      product_id,
+      quantity,
+      rate,
+      unit,
+      contributors = [],
+      buyer_id,
+      buyer_type,
+      buyer_description,
+      date
+    } = req.body;
+
+    const amount = parseFloat(quantity);
+    const rateVal = parseFloat(rate);
+
+    if (isNaN(amount) || isNaN(rateVal)) {
+      return res.status(400).json({ message: 'Invalid quantity or rate' });
+    }
+
+    const buyingAmount = amount * rateVal;
+    const contributorsSum = Array.isArray(contributors)
+      ? contributors.reduce((sum, c) => sum + parseFloat(c.amount || 0), 0)
+      : 0;
+    const totalAmount = buyingAmount + contributorsSum;
+
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    // Check if transaction exists
+    const [existingTransaction] = await conn.query(
+      'SELECT * FROM buyselltransactions WHERE id = ?', 
+      [transactionId]
+    );
+
+    if (existingTransaction.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    const originalTransaction = existingTransaction[0];
+    
+    // Find the corresponding sell transaction
+    const [sellTransaction] = await conn.query(`
+      SELECT * FROM buyselltransactions 
+      WHERE transaction_type = 'sell' 
+      AND buyer_id = ? 
+      AND party_id = ? 
+      AND product_id = ? 
+      AND date = ?
+      AND id != ?
+    `, [
+      originalTransaction.party_id, 
+      originalTransaction.buyer_id, 
+      originalTransaction.product_id, 
+      originalTransaction.date,
+      transactionId
+    ]);
+
+    const sellId = sellTransaction.length > 0 ? sellTransaction[0].id : null;
+
+    // Delete existing related records
+    await conn.query('DELETE FROM contributors WHERE transaction_id = ?', [transactionId]);
+    await conn.query('DELETE FROM transactions WHERE buySellTransactionId = ?', [transactionId]);
+    
+    if (sellId) {
+      await conn.query('DELETE FROM transactions WHERE buySellTransactionId = ?', [sellId]);
+    }
+
+    // UPDATE buy record
+    await conn.query(`
+      UPDATE buyselltransactions 
+      SET date = ?, party_id = ?, party_type = ?, party_description = ?, 
+          product_id = ?, quantity = ?, rate = ?, unit = ?, 
+          buying_amount = ?, contributors_sum = ?, total_amount = ?, 
+          buyer_id = ?, buyer_description = ?, buyer_type = ?
+      WHERE id = ?
+    `, [
+      date, party_id, party_type, party_description, product_id, quantity, rate, unit,
+      buyingAmount, contributorsSum, totalAmount,
+      buyer_id, buyer_description, buyer_type, transactionId
+    ]);
+
+    // INSERT updated party ledger entry (credit)
+    await conn.query(`
+      INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, buySellTransactionId)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [
+      party_id, party_description, date,
+      party_description, 'credit', buyingAmount, transactionId
+    ]);
+
+    // INSERT updated contributors (if any)
+    for (const c of contributors) {
+      const contributorAmount = parseFloat(c.amount);
+      if (!c.client_id || isNaN(contributorAmount)) continue;
+
+      await conn.query(`
+        INSERT INTO contributors (transaction_id, client_id, description, amount, type)
+        VALUES (?, ?, ?, ?, ?)
+      `, [transactionId, c.client_id, c.description, contributorAmount, c.type]);
+
+      await conn.query(`
+        INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, buySellTransactionId)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, [
+        c.client_id, c.description, date,
+        party_description, c.type, contributorAmount, transactionId
+      ]);
+    }
+
+    // UPDATE or CREATE sell record
+    if (sellId) {
+      await conn.query(`
+        UPDATE buyselltransactions 
+        SET date = ?, party_id = ?, party_type = ?, party_description = ?, 
+            product_id = ?, quantity = ?, rate = ?, unit = ?, 
+            buying_amount = ?, contributors_sum = ?, total_amount = ?, 
+            buyer_id = ?, buyer_description = ?, buyer_type = ?
+        WHERE id = ?
+      `, [
+        date, buyer_id, buyer_type, buyer_description, product_id, quantity, rate, unit,
+        buyingAmount, contributorsSum, totalAmount,
+        party_id, party_description, party_type, sellId
+      ]);
+    } else {
+      // Create new sell record if it doesn't exist
+      const [newSellResult] = await conn.query(`
+        INSERT INTO buyselltransactions 
+        (transaction_type, date, party_id, party_type, party_description, product_id, quantity, rate, unit, buying_amount, contributors_sum, total_amount, buyer_id, buyer_description, buyer_type)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        'sell', date, buyer_id, buyer_type, buyer_description, product_id, quantity, rate, unit,
+        buyingAmount, contributorsSum, totalAmount,
+        party_id, party_description, party_type
+      ]);
+      
+      sellId = newSellResult.insertId;
+    }
+
+    // INSERT updated buyer ledger entry (debit)
+    await conn.query(`
+      INSERT INTO transactions (client_id, name, date, description, transaction_type, amount, buySellTransactionId)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [
+      buyer_id, buyer_description, date,
+      buyer_description, 'debit', totalAmount, sellId
+    ]);
+
+    await conn.commit();
+    res.status(200).json({ 
+      message: 'Transaction updated successfully', 
+      buyTransactionId: transactionId, 
+      sellTransactionId: sellId 
+    });
+
+  } catch (err) {
+    if (conn) await conn.rollback();
+    console.error('Transaction update failed:', err);
+    res.status(500).json({
+      message: 'Transaction update failed',
+      error: err.message || JSON.stringify(err)
+    });
+  } finally {
+    if (conn) conn.release();
+  }
+});
 
 router.delete('/deleteBuySellTransaction/:id', async (req, res) => {
   let conn;
