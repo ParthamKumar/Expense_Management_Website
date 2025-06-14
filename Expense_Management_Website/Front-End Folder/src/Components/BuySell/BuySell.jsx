@@ -9,31 +9,42 @@ const BuySell = () => {
   const [combinedTransactions, setCombinedTransactions] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:3000/buysell/gettransactions')
-      .then(res => {
-        const transactions = res.data;
-        const grouped = {};
+    loadTransactions();
+  }, []);
 
-        transactions.forEach(tx => {
-          if (tx.transaction_type === 'buy') {
-            grouped[tx.id] = { buy: tx };
-          } else if (tx.transaction_type === 'sell') {
-            const match = Object.values(grouped).find(
-              g => g.buy &&
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = date.toLocaleString('en-GB', { month: 'long' });
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const loadTransactions = async () => {
+    try {
+      const res = await axios.get('http://localhost:3000/buysell/gettransactions');
+      const transactions = res.data;
+      const grouped = {};
+
+      transactions.forEach(tx => {
+        if (tx.transaction_type === 'buy') {
+          grouped[tx.id] = { buy: tx };
+        } else if (tx.transaction_type === 'sell') {
+          const match = Object.values(grouped).find(
+            g => g.buy &&
               g.buy.buyer_id === tx.party_id &&
               g.buy.date === tx.date
-            );
-            if (match) match.sell = tx;
-            else grouped[`sell-${tx.id}`] = { sell: tx }; // fallback
-          }
-        });
-
-        setCombinedTransactions(Object.values(grouped));
-      })
-      .catch(err => {
-        console.error('Error fetching transactions:', err);
+          );
+          if (match) match.sell = tx;
+          else grouped[`sell-${tx.id}`] = { sell: tx };
+        }
       });
-  }, []);
+
+      setCombinedTransactions(Object.values(grouped));
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+    }
+  };
 
   const handleAction = (type) => {
     setFormType(type);
@@ -42,7 +53,21 @@ const BuySell = () => {
 
   const handleFormSubmit = () => {
     setShowForm(false);
-    // Optionally re-fetch data here
+    loadTransactions();
+  };
+
+  const handleDeleteTransaction = async (buyTransactionId) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this transaction?');
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`http://localhost:3000/buysell/deleteBuySellTransaction/${buyTransactionId}`);
+      alert('Transaction deleted successfully');
+      loadTransactions();
+    } catch (err) {
+      console.error('Failed to delete transaction:', err);
+      alert('Failed to delete transaction');
+    }
   };
 
   return (
@@ -69,37 +94,37 @@ const BuySell = () => {
 
           return (
             <div key={idx} className="transaction-card">
-
-                {/* Card Actions */}
               <div className="card-actions">
                 <button className="action-btn edit-btn" title="Edit Transaction">
                   ✏️
                 </button>
-                <button className="action-btn delete-btn" title="Delete Transaction">
+                <button
+                  className="action-btn delete-btn"
+                  title="Delete Transaction"
+                  onClick={() => handleDeleteTransaction(buy.id)}
+                >
                   🗑️
                 </button>
               </div>
-              {/* Header Section */}
+
               <div className="card-header">
                 <div className="transaction-type">
                   <span className="buy-label">Buying</span>
                 </div>
                 <div className="date-section">
                   <span className="date-label">DATE</span>
-                  <div className="date-value">{new Date(buy.date).toLocaleDateString()}</div>
+                  <div className="date-value">{formatDate(buy.date)}</div>
                 </div>
               </div>
 
-              {/* Party Information */}
               <div className="party-info">
                 <div className="party-row">
                   <span className="label">Party Name:</span>
                   <span className="value">{buy.party_name}</span>
-                  <span className="type-badge type-{buy.party_type}">{buy.party_type}</span>
+                  <span className={`type-badge type-${buy.party_type}`}>{buy.party_type}</span>
                 </div>
               </div>
 
-              {/* Product Information */}
               <div className="product-section">
                 <table className="product-table">
                   <thead>
@@ -121,7 +146,6 @@ const BuySell = () => {
                 </table>
               </div>
 
-              {/* Contributors Section */}
               <div className="contributors-section">
                 <h4 className="section-title">Contributors</h4>
                 {buy.contributors && buy.contributors.length > 0 ? (
@@ -146,19 +170,17 @@ const BuySell = () => {
                 ) : (
                   <p className="no-contributors">No contributors</p>
                 )}
-                
+
                 <div className="contributors-total">
                   <span>₹{Number(buy.contributors_sum).toLocaleString()}</span>
                 </div>
               </div>
 
-              {/* Grand Total */}
               <div className="grand-total">
                 <span className="total-label">Grand Total</span>
                 <span className="total-amount">₹{Number(buy.total_amount).toLocaleString()}</span>
               </div>
 
-              {/* Selling Section (if exists) */}
               {sell && (
                 <div className="selling-section">
                   <h4 className="section-title">Selling</h4>
@@ -176,7 +198,7 @@ const BuySell = () => {
                         <td>{sell.party_name}</td>
                         <td>{sell.party_description}</td>
                         <td>
-                          <span className="type-badge type-{sell.party_type}">{sell.party_type}</span>
+                          <span className={`type-badge type-${sell.party_type}`}>{sell.party_type}</span>
                         </td>
                         <td>₹{Number(sell.total_amount).toLocaleString()}</td>
                       </tr>

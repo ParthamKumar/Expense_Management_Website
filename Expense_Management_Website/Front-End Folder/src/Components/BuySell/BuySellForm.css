@@ -1,124 +1,396 @@
+/* BuySellForm.css - Improved with Better Contribution Section */
+
 .form-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
+  z-index: 1000;
+  padding: 20px;
 }
 
 .buy-sell-form {
   background: white;
-  padding: 25px;
   border-radius: 10px;
-  width: 90%;
-  max-width: 900px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 1350px; /* Increased from 1000px */
+  width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  position: relative;
+}
+
+.buy-sell-form.buy {
+  border-top: 4px solid #007bff;
+}
+
+.buy-sell-form.sell {
+  border-top: 4px solid #28a745;
 }
 
 .form-header {
+  background: #f8f9fa;
+  padding: 20px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 10px 10px 0 0;
+}
+
+.form-header h2 {
+  color: #495057;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
 }
 
 .close-btn {
-  background: none;
+  background: #6c757d;
   border: none;
-  font-size: 24px;
+  color: white;
+  font-size: 20px;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
   cursor: pointer;
-  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background: #5a6268;
 }
 
 .form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
+  padding: 30px;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr; /* Changed to give more space to middle column */
+  gap: 8px;
 }
 
 .form-section {
-  background: #f9f9f9;
+  background: #f8f9fa;
+  border-radius: 8px;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 6px rgba(0,0,0,0.05);
+  border: 1px solid #dee2e6;
+}
+
+/* Special styling for the contributors section (middle column) */
+.form-section:nth-child(2) {
+  padding: 20px; /* Slightly more padding */
 }
 
 .form-section h3 {
-  margin-top: 0;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 8px;
-  margin-bottom: 20px;
-  font-size: 18px;
-  color: #333;
+  color: #343a40;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #dee2e6;
+  text-align: center;
+}
+
+.form-section:nth-child(1) h3 {
+  color: #007bff;
+  border-bottom-color: #007bff;
+}
+
+.form-section:nth-child(2) h3 {
+  color: #fd7e14;
+  border-bottom-color: #fd7e14;
+}
+
+.form-section:nth-child(3) h3 {
+  color: #28a745;
+  border-bottom-color: #28a745;
 }
 
 .input-group {
   margin-bottom: 15px;
-  display: flex;
-  flex-direction: column;
 }
 
 .input-group label {
-  font-weight: bold;
+  display: block;
+  color: #495057;
+  font-weight: 500;
   margin-bottom: 5px;
+  font-size: 14px;
 }
 
 .input-group input,
 .input-group select {
-  padding: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
   border-radius: 5px;
-  border: 1px solid #ccc;
+  font-size: 14px;
+  transition: border-color 0.15s ease-in-out;
+  background: white;
+  box-sizing: border-box;
 }
 
-.read-only {
-  background-color: #eee;
+.input-group input:focus,
+.input-group select:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-.contributor-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
+.input-group input[readonly] {
+  background: #e9ecef;
+  color: #6c757d;
+  font-weight: 600;
 }
 
-.contributor-row input,
-.contributor-row select {
-  flex: 1;
-  min-width: 120px;
+/* Contributors Table Layout - Improved */
+.contributors-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
 }
 
+.contributors-table th {
+  background-color: #e9ecef;
+  padding: 12px 8px; /* Increased padding */
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  font-size: 13px; /* Slightly larger font */
+}
+
+.contributors-table td {
+  padding: 8px; /* Increased padding */
+  border: 1px solid #dee2e6;
+}
+
+.contributors-table input,
+.contributors-table select {
+  width: 100%;
+  padding: 8px 10px; /* Increased padding */
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+  font-size: 14px; /* Larger font size */
+  margin: 0;
+}
+
+.contributors-table .remove-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 12px; /* Increased padding */
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 13px; /* Slightly larger font */
+  width: 100%;
+  font-weight: 500;
+}
+
+.contributors-table .remove-btn:hover {
+  background: #c82333;
+}
+
+.add-contributor-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px; /* Increased padding */
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 15px;
+  width: 100%;
+  font-size: 15px; /* Slightly larger font */
+}
+
+.add-contributor-btn:hover {
+  background: #218838;
+}
+
+/* Summary boxes */
+.summary-box {
+  background: #fff;
+  border: 2px solid #dee2e6;
+  border-radius: 5px;
+  padding: 12px;
+  margin: 15px 0;
+  text-align: center;
+}
+
+.summary-box.buying {
+  border-color: #007bff;
+  background: #e7f3ff;
+}
+
+.summary-box.contributors {
+  border-color: #fd7e14;
+  background: #fff4e6;
+}
+
+.summary-box.total {
+  border-color: #28a745;
+  background: #e8f5e8;
+}
+
+.summary-box label {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.summary-box input {
+  font-weight: 700;
+  font-size: 16px;
+  text-align: center;
+  background: transparent;
+  border: none;
+}
+
+/* Form Actions */
 .form-actions {
-  margin-top: 20px;
+  padding: 20px 30px;
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: center;
+  gap: 15px;
+  border-top: 1px solid #dee2e6;
+  background: #f8f9fa;
+  border-radius: 0 0 10px 10px;
 }
 
 .btn {
-  padding: 10px 16px;
+  padding: 12px 30px;
   border: none;
-  border-radius: 6px;
-  font-weight: bold;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn.cancel {
-  background: #ccc;
-  color: #333;
+  background: #6c757d;
+  color: white;
+}
+
+.btn.cancel:hover {
+  background: #5a6268;
+}
+
+.btn.submit {
+  background: #007bff;
+  color: white;
 }
 
 .btn.submit.buy {
-  background: #27ae60;
-  color: white;
+  background: #007bff;
 }
 
 .btn.submit.sell {
-  background: #c0392b;
-  color: white;
+  background: #28a745;
+}
+
+.btn.submit:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 1100px) {
+  .form-grid {
+    grid-template-columns: 1fr 1.5fr 1fr; /* Adjusted ratio for medium screens */
+  }
+}
+
+@media (max-width: 900px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  .contributors-table th,
+  .contributors-table td {
+    padding: 6px; /* Better than original 3px */
+  }
+  
+  .contributors-table input,
+  .contributors-table select {
+    padding: 6px 8px; /* Better than original 3px 5px */
+    font-size: 13px; /* Larger than original 12px */
+  }
+}
+
+@media (max-width: 600px) {
+  .form-overlay {
+    padding: 10px;
+  }
+  
+  .form-header {
+    padding: 15px 20px;
+  }
+  
+  .form-header h2 {
+    font-size: 20px;
+  }
+  
+  .form-section {
+    padding: 15px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 20px;
+  }
+  
+  .btn {
+    width: 200px;
+  }
+  
+  .contributors-table {
+    font-size: 12px; /* Slightly larger than original 11px */
+  }
+}
+
+/* Animation */
+.buy-sell-form {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar styling */
+.buy-sell-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.buy-sell-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.buy-sell-form::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.buy-sell-form::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './BuySellForm.css';
 import { useNavigate } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+
 
 const BuySellForm = ({ type, onClose, onSubmit }) => {
   const [clients, setClients] = useState([]);
@@ -80,56 +83,55 @@ const BuySellForm = ({ type, onClose, onSubmit }) => {
     setFormData(prev => ({ ...prev, contributors: updated }));
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const party = clients.find(c => c.name === formData.partyName);
-    const buyer = clients.find(c => c.name === formData.buyerName);
-    const product = products.find(p => p.name === formData.productName);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const party = clients.find(c => c.name === formData.partyName);
+      const buyer = clients.find(c => c.name === formData.buyerName);
+      const product = products.find(p => p.name === formData.productName);
 
-    if (!party || !buyer || !product) {
-      alert('Please ensure party, buyer, and product are selected properly.');
-      return;
+      if (!party || !buyer || !product) {
+        alert('Please ensure party, buyer, and product are selected properly.');
+        return;
+      }
+
+      const payload = {
+        transaction_type: type,
+        date: formData.date,
+        party_id: party.id,
+        party_description: formData.partyDescription,
+        party_type: formData.partyType,
+        product_id: product.id,
+        quantity: parseFloat(formData.quantity),
+        rate: parseFloat(formData.rate),
+        unit: formData.unit,
+        buying_amount: parseFloat(formData.buyingAmount),
+        contributors_sum: parseFloat(formData.contributorsSum),
+        total_amount: parseFloat(formData.totalAmount),
+        buyer_id: buyer.id,
+        buyer_description: formData.buyerDescription,
+        buyer_type: formData.buyerType,
+        contributors: formData.contributors.map(c => {
+          const contributorClient = clients.find(cl => cl.name === c.name);
+          return {
+            client_id: contributorClient?.id || null,
+            description: c.description,
+            amount: parseFloat(c.amount),
+            type: c.type
+          };
+        }).filter(c => c.client_id !== null)
+      };
+
+      const res = await axios.post('http://localhost:3000/buysell/addBuySellTransaction', payload);
+
+      alert('Transaction saved successfully!');
+      navigate('/dashboard/buysell');
+      if (onSubmit) onSubmit(res.data);
+    } catch (err) {
+      console.error('Error saving transaction:', err);
+      alert('Failed to save transaction.');
     }
-
-    const payload = {
-      transaction_type: type,
-      date: formData.date,
-      party_id: party.id,
-      party_description: formData.partyDescription,
-      party_type: formData.partyType,
-      product_id: product.id,
-      quantity: parseFloat(formData.quantity),
-      rate: parseFloat(formData.rate),
-      unit: formData.unit,
-      buying_amount: parseFloat(formData.buyingAmount),
-      contributors_sum: parseFloat(formData.contributorsSum),
-      total_amount: parseFloat(formData.totalAmount),
-      buyer_id: buyer.id,
-      buyer_description: formData.buyerDescription,
-      buyer_type: formData.buyerType,
-      contributors: formData.contributors.map(c => {
-        const contributorClient = clients.find(cl => cl.name === c.name);
-        return {
-          client_id: contributorClient?.id || null,
-          description: c.description,
-          amount: parseFloat(c.amount),
-          type: c.type
-        };
-      }).filter(c => c.client_id !== null)
-    };
-
-    const res = await axios.post('http://localhost:3000/buysell/addBuySellTransaction', payload);
-
-    alert('Transaction saved successfully!');
-    navigate('/dashboard/buysell');
-    if (onSubmit) onSubmit(res.data);
-  } catch (err) {
-    console.error('Error saving transaction:', err);
-    alert('Failed to save transaction.');
-  }
-};
-
+  };
 
   return (
     <div className="form-overlay">
@@ -141,13 +143,29 @@ const handleSubmit = async (e) => {
 
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
-            {/* Section 1: Buying */}
+            
+            {/* Section 1: Buying Details */}
             <div className="form-section">
               <h3>From Whom You Are Buying</h3>
 
               <div className="input-group">
                 <label>Date*</label>
-                <input type="date" name="date" value={formData.date} onChange={handleChange} required />
+                <DatePicker
+  selected={formData.date ? new Date(formData.date) : null}
+  onChange={(date) =>
+    setFormData((prev) => ({
+      ...prev,
+      date: date.toISOString().split('T')[0]  // Saving as "YYYY-MM-DD"
+    }))
+  }
+  dateFormat="dd-MM-yyyy"
+  showMonthDropdown
+  showYearDropdown
+  dropdownMode="select"
+  className="custom-datepicker"
+  required
+/>
+
               </div>
 
               <div className="input-group">
@@ -203,60 +221,96 @@ const handleSubmit = async (e) => {
                 </select>
               </div>
 
-              <div className="input-group">
+              <div className="summary-box buying">
                 <label>Buying Amount</label>
                 <input type="number" name="buyingAmount" value={formData.buyingAmount} readOnly />
               </div>
             </div>
 
-            {/* Section 2: Contributors */}
+            {/* Section 2: Contributors Table */}
             <div className="form-section">
               <h3>Contributors (Transport, Labor, etc.)</h3>
-              {formData.contributors.map((c, i) => (
-                <div key={i} className="contributor-row">
-                  <select
-                    value={c.name}
-                    onChange={e => handleContributorChange(i, 'name', e.target.value)}
-                    required
-                  >
-                    <option value="">-- Select Client --</option>
-                    {clients.map((cl, idx) => (
-                      <option key={idx} value={cl.name}>{cl.name}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Description"
-                    value={c.description}
-                    onChange={e => handleContributorChange(i, 'description', e.target.value)}
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Amount"
-                    value={c.amount}
-                    onChange={e => handleContributorChange(i, 'amount', e.target.value)}
-                    required
-                    step="0.01"
-                  />
-                  <select value={c.type} onChange={e => handleContributorChange(i, 'type', e.target.value)}>
-                    <option value="credit">Credit</option>
-                    <option value="debit">Debit</option>
-                  </select>
-                  {formData.contributors.length > 1 && (
-                    <button type="button" onClick={() => removeContributor(i)}>Remove</button>
-                  )}
-                </div>
-              ))}
-              <button type="button" onClick={addContributor}>+ Add Contributor</button>
+              
+              <table className="contributors-table">
+                <thead>
+                  <tr>
+                    <th>Contributor Name</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formData.contributors.map((c, i) => (
+                    <tr key={i}>
+                      <td>
+                        <select
+                          value={c.name}
+                          onChange={e => handleContributorChange(i, 'name', e.target.value)}
+                          required
+                        >
+                          <option value="">-- Select Client --</option>
+                          {clients.map((cl, idx) => (
+                            <option key={idx} value={cl.name}>{cl.name}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          placeholder="Description"
+                          value={c.description}
+                          onChange={e => handleContributorChange(i, 'description', e.target.value)}
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          placeholder="Amount"
+                          value={c.amount}
+                          onChange={e => handleContributorChange(i, 'amount', e.target.value)}
+                          required
+                          step="0.01"
+                        />
+                      </td>
+                      <td>
+                        <select 
+                          value={c.type} 
+                          onChange={e => handleContributorChange(i, 'type', e.target.value)}
+                        >
+                          <option value="credit">Credit</option>
+                          <option value="debit">Debit</option>
+                        </select>
+                      </td>
+                      <td>
+                        {formData.contributors.length > 1 && (
+                          <button 
+                            type="button" 
+                            className="remove-btn"
+                            onClick={() => removeContributor(i)}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              
+              <button type="button" className="add-contributor-btn" onClick={addContributor}>
+                + Add Contributor
+              </button>
 
-              <div className="input-group">
+              <div className="summary-box contributors">
                 <label>Contributors Total</label>
                 <input type="number" name="contributorsSum" value={formData.contributorsSum} readOnly />
               </div>
             </div>
 
-            {/* Section 3: Selling */}
+            {/* Section 3: Selling Details */}
             <div className="form-section">
               <h3>To Whom You Are Selling</h3>
 
@@ -283,7 +337,7 @@ const handleSubmit = async (e) => {
                 </select>
               </div>
 
-              <div className="input-group">
+              <div className="summary-box total">
                 <label>Grand Total</label>
                 <input type="number" name="totalAmount" value={formData.totalAmount} readOnly />
               </div>
