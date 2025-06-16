@@ -221,22 +221,22 @@ const BuySellForm = ({ type, onClose, onSubmit, editData }) => {
               <h3>From Whom You Are Buying</h3>
 
               <div className="input-group">
-                <label>Date*</label>
+                <label>Date*  .</label>
                 <DatePicker
-                  selected={formData.date ? new Date(formData.date) : null}
-                  onChange={(date) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      date: date.toISOString().split('T')[0]  // Saving as "YYYY-MM-DD"
-                    }))
-                  }
-                  dateFormat="dd-MM-yyyy"
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                  className="custom-datepicker"
-                  required
-                />
+  selected={formData.date ? new Date(formData.date) : null}
+  onChange={(date) => {
+    setFormData((prev) => ({
+      ...prev,
+      date: date ? date.toISOString().split('T')[0] : ''  // Handle null
+    }));
+  }}
+  dateFormat="dd-MM-yyyy"
+  showMonthDropdown
+  showYearDropdown
+  dropdownMode="select"
+  className="custom-datepicker"
+  required
+/>
               </div>
 
               <div className="input-group">

@@ -1,83 +1,270 @@
 .product-details-container {
-    max-width: 100%;
-    margin: 2rem auto;
-    padding: 20px;
-    overflow-x: auto;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-sizing: border-box;
+}
+
+.product-details-container h2 {
+  margin-bottom: 20px;
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.product-details-container > p {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin: 40px 0;
+}
+
+.search-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-fields input,
+.search-fields button {
+  padding: 8px;
+  font-size: 14px;
+}
+
+.search-fields button {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.search-fields button:hover {
+  background-color: #d32f2f;
+}
+
+.summary-table {
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.summary-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.summary-table th,
+.summary-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.transactions-table {
+  flex: 1;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.transactions-table table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.transactions-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.transactions-table thead th {
+  padding: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.transactions-table thead th:last-child {
+  border-right: none;
+}
+
+.transactions-table tbody {
+  overflow-y: auto;
+  display: block;
+  max-height: 60vh;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.transactions-table tbody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.transactions-table tbody::-webkit-scrollbar-track {
+  background: #f7fafc;
+}
+
+.transactions-table tbody::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.transactions-table tbody::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+.transactions-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  transition: background-color 0.2s ease;
+}
+
+.transactions-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.transactions-table tbody td {
+  padding: 12px;
+  font-size: 0.95rem;
+  color: #4a5568;
+  word-wrap: break-word;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+/* Column widths */
+.transactions-table th:nth-child(1),
+.transactions-table td:nth-child(1) {
+  width: 110px;
+}
+
+.transactions-table th:nth-child(2),
+.transactions-table td:nth-child(2) {
+  width: 180px;
+}
+
+.transactions-table th:nth-child(3),
+.transactions-table td:nth-child(3) {
+  width: 200px;
+}
+
+.transactions-table th:nth-child(4),
+.transactions-table td:nth-child(4) {
+  width: 100px;
+  text-align: center;
+}
+
+.transactions-table th:nth-child(5),
+.transactions-table td:nth-child(5) {
+  width: 100px;
+  text-align: right;
+}
+
+.transactions-table th:nth-child(6),
+.transactions-table td:nth-child(6) {
+  width: 80px;
+  text-align: center;
+}
+
+.transactions-table th:nth-child(7),
+.transactions-table td:nth-child(7) {
+  width: 140px;
+  text-align: right;
+  font-weight: 600;
+  color: #0ecf00;
+}
+
+.transactions-table th:nth-child(8),
+.transactions-table td:nth-child(8) {
+  width: 100px;
+  text-align: center;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .product-details-container {
+    padding: 10px;
   }
-  
+
   .product-details-container h2 {
-    color: #2c3e50;
-    text-align: center;
-    margin-bottom: 1.5rem;
-    font-size: 1.8rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #e2e8f0;
+    font-size: 1.4rem;
+    padding: 12px;
   }
-  
-  .transactions-table {
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    background: white;
-  }
-  
-  .transactions-table table {
+
+  .search-fields input,
+  .search-fields button {
     width: 100%;
-    border-collapse: collapse;
-    min-width: 1200px;
   }
-  
-  .transactions-table th,
-  .transactions-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border: 1px solid #e2e8f0;
-    font-size: 0.9rem;
+
+  .transactions-table tbody {
+    max-height: 50vh;
   }
-  
-  .transactions-table th {
-    background-color: #4299e1;
-    color: white;
-    font-weight: 600;
-    position: sticky;
-    left: 0;
+
+  .transactions-table thead th,
+  .transactions-table tbody td {
+    font-size: 0.8rem;
+    padding: 10px;
   }
-  
-  .transactions-table tbody tr:nth-child(even) {
-    background-color: #f8fafc;
+
+  .transactions-table th:nth-child(1),
+  .transactions-table td:nth-child(1) {
+    width: 100px;
   }
-  
-  .transactions-table tbody tr:hover {
-    background-color: #ebf8ff;
+
+  .transactions-table th:nth-child(2),
+  .transactions-table td:nth-child(2) {
+    width: 150px;
   }
-  
-  .number {
-    font-family: 'Courier New', Courier, monospace;
-    text-align: right;
-    min-width: 100px;
+
+  .transactions-table th:nth-child(3),
+  .transactions-table td:nth-child(3) {
+    width: 160px;
   }
-  
-  .total {
-    font-weight: 600;
-    color: #2b6cb0;
-    background-color: #ebf8ff;
+
+  .transactions-table th:nth-child(4),
+  .transactions-table td:nth-child(4) {
+    width: 80px;
   }
-  
-  /* Currency formatting */
-  .number::before {
-    content: '₹';
-    margin-right: 2px;
+
+  .transactions-table th:nth-child(5),
+  .transactions-table td:nth-child(5) {
+    width: 80px;
   }
-  
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .product-details-container {
-      margin: 1rem;
-      padding: 10px;
-    }
-  
-    .transactions-table th,
-    .transactions-table td {
-      padding: 8px 10px;
-      font-size: 0.85rem;
-    }
+
+  .transactions-table th:nth-child(6),
+  .transactions-table td:nth-child(6) {
+    width: 60px;
   }
+
+  .transactions-table th:nth-child(7),
+  .transactions-table td:nth-child(7) {
+    width: 120px;
+  }
+
+  .transactions-table th:nth-child(8),
+  .transactions-table td:nth-child(8) {
+    width: 80px;
+  }
+}
