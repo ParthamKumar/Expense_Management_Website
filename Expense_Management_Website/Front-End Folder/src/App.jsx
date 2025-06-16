@@ -28,6 +28,8 @@ import AddProduct from './Components/Products/AddProduct'
 import ProductDetails from './Components/Products/ProductDetails'
 import BuySell from './Components/BuySell/BuySell'
 import BuySellForm from './Components/BuySell/BuySellForm'
+import Billing from './Components/Billing/Billing'
+import AddBill from './Components/Billing/AddBill'
 
 
 function App() {
@@ -62,6 +64,10 @@ function App() {
 
         <Route path='/dashboard/buysell' element={<BuySell />}></Route>
         <Route path='/dashboard/buysell/buysellform' element={<BuySellForm />}></Route>
+
+        <Route path='/dashboard/billing' element={<Billing />}></Route>
+        <Route path='/dashboard/billing/addbill' element={<AddBill />}></Route>
+
 
 
 
