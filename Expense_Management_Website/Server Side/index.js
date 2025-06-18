@@ -6,6 +6,7 @@ import AccountsRouter from "./Routes/AccountsRouter.js";
 import TransactionRouter from "./Routes/TransactionRouter.js"; // Fixed typo
 import ProductsRouter from './Routes/ProductsRouter.js'
 import BuySellRouter from './Routes/BuySellRouter.js'
+import BilligRouter from './Routes/BillingRouter.js'
 import Jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 
@@ -23,6 +24,8 @@ app.use('/accounts', AccountsRouter);
 app.use('/transactions', TransactionRouter); // Fixed typo
 app.use('/products',ProductsRouter)
 app.use('/buysell',BuySellRouter)
+app.use('/billing',BilligRouter)
+
 app.use(express.static('Public'));
 
 const verifyUser = (req, res, next) => {

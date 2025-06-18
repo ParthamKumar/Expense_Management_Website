@@ -1,30 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './AddBill.css';
 import { Trash2 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
+
 const AddBill = () => {
+    const [billNo, setBillNo] = useState('');
+
+  const [clients, setClients] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [selectedClient, setSelectedClient] = useState('');
   const [items, setItems] = useState([
     {
-      product: 'Web Development Serv',
-      description: 'Custom website development with',
+      product: '',
+      description: '',
       qty: 1,
-      price: 2500,
+      price: 0,
       type: 'Debit'
-    },
-    {
-      product: 'SEO Optimization',
-      description: 'Search engine optimization for 6',
-      qty: 6,
-      price: 300,
-      type: 'Credit'
     }
   ]);
-
   const [showPreview, setShowPreview] = useState(false);
   const [invoiceDate, setInvoiceDate] = useState(new Date());
   const [dueDate, setDueDate] = useState(new Date());
+
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [clientRes, productRes, billNoRes] = await Promise.all([
+        axios.get('http://localhost:3000/accounts/getClients'),
+        axios.get('http://localhost:3000/products/getProducts'),
+        axios.get('http://localhost:3000/billing/nextBillNo')
+      ]);
+
+      setClients(clientRes.data);
+      setProducts(productRes.data);
+      setBillNo(billNoRes.data.billNo);
+      console.log(billNo)
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+  fetchData();
+}, []);
+
 
   const addItem = () => {
     const newItem = {
@@ -52,6 +72,36 @@ const AddBill = () => {
   const subtotal = items.reduce((sum, item) => sum + item.qty * item.price, 0);
   const total = subtotal;
 
+  const saveDraft = async () => {
+    try {
+      const payload = {
+        clientId: selectedClient,
+        items: items,
+        invoiceDate: invoiceDate.toISOString(),
+        dueDate: dueDate.toISOString(),
+        totalAmount: total
+      };
+      // console.log(payload)
+      
+
+
+      const response = await axios.post('http://localhost:3000/billing/addBill', payload);
+
+      if (response.status === 200 || response.status === 201) {
+        alert('Bill saved successfully!');
+        setSelectedClient('');
+        setItems([{ product: '', description: '', qty: 1, price: 0, type: 'Debit' }]);
+        setInvoiceDate(new Date());
+        setDueDate(new Date());
+      } else {
+        alert('Failed to save bill.');
+      }
+    } catch (error) {
+      console.error('Error saving bill:', error);
+      alert('Error saving bill.');
+    }
+  };
+
   return (
     <div className="bill-container">
       <div className="scroll-content">
@@ -66,51 +116,51 @@ const AddBill = () => {
               <p>Address: Site Area Hyderabad</p>
             </div>
           </div>
-          {/* <div className="invoice-info">
-            <strong>INVOICE</strong>
-          </div> */}
+
           <div className="date-fields">
-  <p className="bill-no">Bill No: <span>INV-2025-001</span></p>
-
-  <div className="date-row">
-    <div className="date-group">
-      <p>Issue Date</p>
-      <DatePicker
-        selected={invoiceDate}
-        onChange={(date) => setInvoiceDate(date)}
-        placeholderText="Invoice Date"
-        dateFormat="dd MMM yyyy"
-        showMonthDropdown
-        showYearDropdown
-        dropdownMode="select"
-      />
-    </div>
-
-    <div className="date-group">
-      <p>Due Date</p>
-      <DatePicker
-        selected={dueDate}
-        onChange={(date) => setDueDate(date)}
-        placeholderText="Due Date"
-        dateFormat="dd MMM yyyy"
-        showMonthDropdown
-        showYearDropdown
-        dropdownMode="select"
-      />
-    </div>
-  </div>
-</div>
-
+            {/* res.json({ billNo: `INV-2025-${String(nextId).padStart(3, '0')}` }); */}
+        <p className="bill-no">Bill No: <span>{billNo}</span></p>
+            <div className="date-row">
+              <div className="date-group">
+                <p>Issue Date</p>
+                <DatePicker
+                  selected={invoiceDate}
+                  onChange={(date) => setInvoiceDate(date)}
+                  placeholderText="Invoice Date"
+                  dateFormat="dd MMM yyyy"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </div>
+              <div className="date-group">
+                <p>Due Date</p>
+                <DatePicker
+                  selected={dueDate}
+                  onChange={(date) => setDueDate(date)}
+                  placeholderText="Due Date"
+                  dateFormat="dd MMM yyyy"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </div>
+            </div>
+          </div>
         </header>
 
         <section className="bill-to">
           <h3>Bill To:</h3>
-  <select className="client-dropdown">
-    <option value="">-- Select Client --</option>
-    <option value="John Doe Enterprises">John Doe Enterprises</option>
-    <option value="Ali Traders">Ali Traders</option>
-    <option value="Shan Distributors">Shan Distributors</option>
-  </select>
+          <select
+            className="client-dropdown"
+            value={selectedClient}
+            onChange={(e) => setSelectedClient(e.target.value)}
+          >
+            <option value="">-- Select Client --</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>{client.name}</option>
+            ))}
+          </select>
         </section>
 
         <section className="items-section">
@@ -139,18 +189,35 @@ const AddBill = () => {
                       <option value="Credit">Credit</option>
                     </select>
                   </td>
-<td>
-  <select value={item.product} onChange={(e) => updateItem(index, 'product', e.target.value)}>
-    <option value="">-- Select Product --</option>
-    <option value="Web Development Serv">Web Development Serv</option>
-    <option value="SEO Optimization">SEO Optimization</option>
-    <option value="Hosting Services">Hosting Services</option>
-    <option value="Maintenance Plan">Maintenance Plan</option>
-  </select>
-</td>                  <td><input value={item.description} onChange={(e) => updateItem(index, 'description', e.target.value)} /></td>
-                  <td><input type="number" value={item.qty} onChange={(e) => updateItem(index, 'qty', e.target.value)} /></td>
-                  <td><input type="number" value={item.price} onChange={(e) => updateItem(index, 'price', e.target.value)} /></td>
-                  <td>${(item.qty * item.price).toFixed(2)}</td>
+                  <td>
+                    <select value={item.product} onChange={(e) => updateItem(index, 'product', e.target.value)}>
+                      <option value="">-- Select Product --</option>
+                      {products.map((product) => (
+                        <option key={product.id} value={product.name}>{product.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      value={item.description}
+                      onChange={(e) => updateItem(index, 'description', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value={item.qty}
+                      onChange={(e) => updateItem(index, 'qty', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value={item.price}
+                      onChange={(e) => updateItem(index, 'price', e.target.value)}
+                    />
+                  </td>
+                  <td>₹{(item.qty * item.price).toFixed(2)}</td>
                   <td><Trash2 onClick={() => deleteItem(index)} className="delete-icon" /></td>
                 </tr>
               ))}
@@ -160,7 +227,7 @@ const AddBill = () => {
 
         <section className="summary-section">
           <div className="totals-box">
-            <p>Total: <strong className="total-amount">${total.toFixed(2)}</strong></p>
+            <p>Total: <strong className="total-amount">₹{total.toFixed(2)}</strong></p>
           </div>
         </section>
       </div>
@@ -168,125 +235,8 @@ const AddBill = () => {
       <section className="bill-actions">
         <button className="download-btn">⬇ Download</button>
         <button className="preview-btn" onClick={() => setShowPreview(true)}>👁 Preview</button>
-        <button className="save-btn">💾 Save Draft</button>
+        <button className="save-btn" onClick={saveDraft}>💾 Save Draft</button>
       </section>
-
-      {/* // Enhanced Preview Section - Replace your existing preview JSX with this */}
-{showPreview && (
-  <div className="preview-overlay">
-    <div className="preview-modal">
-      <button className="close-preview" onClick={() => setShowPreview(false)}>✖</button>
-      
-      {/* Complete Invoice Header */}
-      <div className="preview-header">
-        <div className="preview-company-details">
-          <img src="/Images/logosticker.png" alt="Company Logo" className="preview-logo" />
-          <div className="preview-company-info">
-            <h2>CHAWLA BROKER</h2>
-            <p>Propritor Naresh Kumar Chawla</p>
-            <p>Contact No: 0333731300</p>
-            <p>Email: nareshchawla7300@gmail.com</p>
-            <p>Address: Site Area Hyderabad</p>
-          </div>
-        </div>
-        
-        <div className="preview-invoice-title">
-          <h1>INVOICE</h1>
-          <p className="invoice-number">INV-2025-001</p>
-        </div>
-      </div>
-
-      {/* Invoice Details */}
-      <div className="preview-details">
-        <div className="preview-bill-to">
-          <h3>Bill To:</h3>
-          <div className="client-info">
-            <p className="client-name">John Doe Enterprises</p>
-            <p>Business Address Line 1</p>
-            <p>Business Address Line 2</p>
-            <p>City, State - Postal Code</p>
-          </div>
-        </div>
-        <div className="preview-dates">
-          <p><strong>Invoice Date:</strong> {invoiceDate.toLocaleDateString('en-GB', { 
-            day: '2-digit', 
-            month: 'short', 
-            year: 'numeric' 
-          })}</p>
-          <p><strong>Due Date:</strong> {dueDate.toLocaleDateString('en-GB', { 
-            day: '2-digit', 
-            month: 'short', 
-            year: 'numeric' 
-          })}</p>
-        </div>
-        
-        
-      </div>
-
-      {/* Items Table */}
-      <div className="preview-items">
-        <table>
-          <thead>
-            <tr>
-              {/* <th>Type</th> */}
-              <th>Product/Service</th>
-              <th>Description</th>
-              <th>Qty</th>
-              <th>Unit Price</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, i) => (
-              <tr key={i}>
-                {/* <td>
-                  <span className={`type-badge ${item.type.toLowerCase()}`}>
-                    {item.type}
-                  </span>
-                </td> */}
-                <td className="product-name">{item.product}</td>
-                <td className="description">{item.description}</td>
-                <td className="quantity">{item.qty}</td>
-                <td className="unit-price">${item.price.toFixed(2)}</td>
-                <td className="item-total">${(item.qty * item.price).toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Summary Section */}
-      <div className="preview-summary">
-        {/* <div className="summary-row">
-          <span className="summary-label">Subtotal:</span>
-          <span className="summary-value">${subtotal.toFixed(2)}</span>
-        </div> */}
-        {/* <div className="summary-row">
-          <span className="summary-label">Tax (0%):</span>
-          <span className="summary-value">$0.00</span>
-        </div> */}
-        <div className="summary-row total-row">
-          <span className="summary-label">Total Amount:</span>
-          <span className="summary-value">${total.toFixed(2)}</span>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="preview-footer">
-        <div className="payment-terms">
-          <h4>Payment Terms:</h4>
-          <p>Payment is due within 7 days of invoice date.</p>
-          {/* <p>Late payments may incur additional charges.</p> */}
-        </div>
-        
-        <div className="thank-you">
-          <p><strong>Thank you for your business!</strong></p>
-          <p>For any questions regarding this invoice, please contact us.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
     </div>
   );
 };
