@@ -1,58 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import './AddBill.css';
-import { Trash2 } from 'lucide-react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-
+import React, { useEffect, useState } from "react";
+import "./AddBill.css";
+import { Option, Trash2 } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import axios from "axios";
 
 const AddBill = () => {
-    const [billNo, setBillNo] = useState('');
-
   const [clients, setClients] = useState([]);
   const [products, setProducts] = useState([]);
-  const [selectedClient, setSelectedClient] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [billNo,setBillNo]= useState('')
+  const [clientId,setClientId] = useState('');
+  const [nextBillNo ,setNextBillNo] = useState('')
+
+
+  useEffect(() => {
+    const fetchClients = axios.get("http://localhost:3000/accounts/getClients");
+    const fetchProducts = axios.get(
+      "http://localhost:3000/products/getProducts"
+    );
+    const fetchNextBillNo = axios.get('http://localhost:3000/billing/nextBillNo');
+
+    // console.log("Clinets", clients);
+    // console.log("products", products);
+    // console.log(nextBillNo)
+    Promise.all([fetchClients, fetchProducts, fetchNextBillNo])
+      .then(([clientsResponse, productsResponse,billRes]) => {
+        setClients(clientsResponse.data);
+        setProducts(productsResponse.data);
+        setNextBillNo(billRes.data.nextBillNo.toString())
+
+
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.log("Error", error);
+        setLoading(false);
+      });
+  }, []);
+
   const [items, setItems] = useState([
     {
-      product: '',
-      description: '',
-      qty: 1,
+      product: "",
+      description: "",
+      qty: 0,
       price: 0,
-      type: 'Debit'
-    }
+      type: "Debit",
+    },
+    {
+      product: "",
+      description: "",
+      qty: 0,
+      price: 0,
+      type: "Credit",
+    },
   ]);
+
   const [showPreview, setShowPreview] = useState(false);
   const [invoiceDate, setInvoiceDate] = useState(new Date());
   const [dueDate, setDueDate] = useState(new Date());
 
- useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const [clientRes, productRes, billNoRes] = await Promise.all([
-        axios.get('http://localhost:3000/accounts/getClients'),
-        axios.get('http://localhost:3000/products/getProducts'),
-        axios.get('http://localhost:3000/billing/nextBillNo')
-      ]);
-
-      setClients(clientRes.data);
-      setProducts(productRes.data);
-      setBillNo(billNoRes.data.billNo);
-      console.log(billNo)
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
-  fetchData();
-}, []);
-
-
   const addItem = () => {
     const newItem = {
-      product: '',
-      description: '',
+      product: "",
+      description: "",
       qty: 1,
       price: 0,
-      type: items.length === 0 ? 'Debit' : 'Credit'
+      type: items.length === 0 ? "Debit" : "Credit",
     };
     setItems([...items, newItem]);
   };
@@ -65,49 +79,72 @@ const AddBill = () => {
 
   const updateItem = (index, key, value) => {
     const updated = [...items];
-    updated[index][key] = key === 'qty' || key === 'price' ? parseInt(value) || 0 : value;
+    updated[index][key] =
+      key === "qty" || key === "price" ? parseInt(value) || 0 : value;
     setItems(updated);
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.qty * item.price, 0);
   const total = subtotal;
 
-  const saveDraft = async () => {
-    try {
-      const payload = {
-        clientId: selectedClient,
-        items: items,
-        invoiceDate: invoiceDate.toISOString(),
-        dueDate: dueDate.toISOString(),
-        totalAmount: total
-      };
-      // console.log(payload)
-      
-
-
-      const response = await axios.post('http://localhost:3000/billing/addBill', payload);
-
-      if (response.status === 200 || response.status === 201) {
-        alert('Bill saved successfully!');
-        setSelectedClient('');
-        setItems([{ product: '', description: '', qty: 1, price: 0, type: 'Debit' }]);
-        setInvoiceDate(new Date());
-        setDueDate(new Date());
-      } else {
-        alert('Failed to save bill.');
-      }
-    } catch (error) {
-      console.error('Error saving bill:', error);
-      alert('Error saving bill.');
-    }
+const handleSave = () => {
+  const billData = {
+    bill_no: billNo,
+    client_id: parseInt(clientId),
+    invoice_date: invoiceDate ? invoiceDate.toISOString().split("T")[0] : null,
+    due_date: dueDate ? dueDate.toISOString().split("T")[0] : null,
+    total_amount: total,
+    type: items.length > 0 ? items[0].type : "Debit",
+    items: items.map(item => ({
+      product_name: item.product, // You'll match this to ID on backend
+      description: item.description,
+      qty: item.qty,
+      price: item.price,
+      type: item.type
+    }))
   };
+  console.log('Data',billData)
+
+  // axios.post("http://localhost:3000/billing/addBill", billData)
+  //   .then((res) => {
+  //     alert("Bill and items saved successfully!");
+  //    // ✅ Reset all fields
+  //     setBillNo('');
+  //     setClientId('');
+  //     setInvoiceDate(new Date());
+  //     setDueDate(new Date());
+  //     setItems([
+  //       {
+  //         product: "",
+  //         description: "",
+  //         qty: 0,
+  //         price: 0,
+  //         type: "Debit",
+  //       },
+  //       {
+  //         product: "",
+  //         description: "",
+  //         qty: 0,
+  //         price: 0,
+  //         type: "Credit",
+  //       },
+  //     ]);
+  //   })
+  //   .catch((err) => {
+  //     console.error("Error saving bill:", err);
+  //   });
+};
 
   return (
     <div className="bill-container">
       <div className="scroll-content">
         <header className="bill-header">
           <div className="company-details">
-            <img src="/Images/logosticker.png" alt="Company Logo" className="company-logo" />
+            <img
+              src="/Images/logosticker.png"
+              alt="Company Logo"
+              className="company-logo"
+            />
             <div>
               <h2>CHAWLA BROKER</h2>
               <p>Propritor Naresh Kumar Chawla</p>
@@ -116,10 +153,24 @@ const AddBill = () => {
               <p>Address: Site Area Hyderabad</p>
             </div>
           </div>
-
+          {/* <div className="invoice-info">
+            <strong>INVOICE</strong>
+          </div> */}
           <div className="date-fields">
-            {/* res.json({ billNo: `INV-2025-${String(nextId).padStart(3, '0')}` }); */}
-        <p className="bill-no">Bill No: <span>{billNo}</span></p>
+            <p className="bill-no">
+              Bill No:  <span>{nextBillNo}</span>
+            </p>
+
+{/* <div className="bill-no">
+  <label htmlFor="billNo">Bill No#</label>
+  <input
+    type="text"
+    id="billNo"
+    value={nextBillNo}
+    onChange={(e) => setBillNo(e.target.value)}
+    placeholder="Enter Bill No"
+  />
+</div> */}
             <div className="date-row">
               <div className="date-group">
                 <p>Issue Date</p>
@@ -133,6 +184,7 @@ const AddBill = () => {
                   dropdownMode="select"
                 />
               </div>
+
               <div className="date-group">
                 <p>Due Date</p>
                 <DatePicker
@@ -151,14 +203,14 @@ const AddBill = () => {
 
         <section className="bill-to">
           <h3>Bill To:</h3>
-          <select
-            className="client-dropdown"
-            value={selectedClient}
-            onChange={(e) => setSelectedClient(e.target.value)}
-          >
-            <option value="">-- Select Client --</option>
+
+          <select name="client-dropdown" value={clientId} onChange={(e)=>setClientId(e.target.value)}>
+            <option value=""> Select Client </option>
             {clients.map((client) => (
-              <option key={client.id} value={client.id}>{client.name}</option>
+              <option key={client.id} value={client.id}>
+                
+                {client.name}
+              </option>
             ))}
           </select>
         </section>
@@ -184,41 +236,62 @@ const AddBill = () => {
               {items.map((item, index) => (
                 <tr key={index}>
                   <td>
-                    <select value={item.type} onChange={(e) => updateItem(index, 'type', e.target.value)}>
+                    <select
+                      value={item.type}
+                      onChange={(e) =>
+                        updateItem(index, "type", e.target.value)
+                      }
+                    >
                       <option value="Debit">Debit</option>
                       <option value="Credit">Credit</option>
                     </select>
                   </td>
                   <td>
-                    <select value={item.product} onChange={(e) => updateItem(index, 'product', e.target.value)}>
-                      <option value="">-- Select Product --</option>
+                    <select
+                      value={item.product}
+                      onChange={(e) =>
+                        updateItem(index, "product", e.target.value)
+                      }
+                    >
+                      <option value="">Select Product</option>
                       {products.map((product) => (
-                        <option key={product.id} value={product.name}>{product.name}</option>
+                        <option key={product.id} value={product.name}>
+                          {product.name}
+                        </option>
                       ))}
                     </select>
-                  </td>
+                  </td>{" "}
                   <td>
                     <input
                       value={item.description}
-                      onChange={(e) => updateItem(index, 'description', e.target.value)}
+                      onChange={(e) =>
+                        updateItem(index, "description", e.target.value)
+                      }
                     />
                   </td>
                   <td>
                     <input
                       type="number"
                       value={item.qty}
-                      onChange={(e) => updateItem(index, 'qty', e.target.value)}
+                      onChange={(e) => updateItem(index, "qty", e.target.value)}
                     />
                   </td>
                   <td>
                     <input
                       type="number"
                       value={item.price}
-                      onChange={(e) => updateItem(index, 'price', e.target.value)}
+                      onChange={(e) =>
+                        updateItem(index, "price", e.target.value)
+                      }
                     />
                   </td>
-                  <td>₹{(item.qty * item.price).toFixed(2)}</td>
-                  <td><Trash2 onClick={() => deleteItem(index)} className="delete-icon" /></td>
+                  <td>${(item.qty * item.price).toFixed(2)}</td>
+                  <td>
+                    <Trash2
+                      onClick={() => deleteItem(index)}
+                      className="delete-icon"
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -227,16 +300,144 @@ const AddBill = () => {
 
         <section className="summary-section">
           <div className="totals-box">
-            <p>Total: <strong className="total-amount">₹{total.toFixed(2)}</strong></p>
+            <p>
+              Total:{" "}
+              <strong className="total-amount">${total.toFixed(2)}</strong>
+            </p>
           </div>
         </section>
       </div>
 
       <section className="bill-actions">
         <button className="download-btn">⬇ Download</button>
-        <button className="preview-btn" onClick={() => setShowPreview(true)}>👁 Preview</button>
-        <button className="save-btn" onClick={saveDraft}>💾 Save Draft</button>
+        <button className="preview-btn" onClick={() => setShowPreview(true)}>
+          👁 Preview
+        </button>
+        <button className="save-btn" onClick={handleSave}>💾 Save Draft</button>
       </section>
+
+      {/* // Enhanced Preview Section - Replace your existing preview JSX with this */}
+      {showPreview && (
+  <div className="preview-overlay">
+    <div className="preview-modal">
+      <button
+        className="close-preview"
+        onClick={() => setShowPreview(false)}
+      >
+        ✖
+      </button>
+
+      {/* Invoice Header */}
+      <div className="preview-header">
+        <div className="preview-company-details">
+          <img
+            src="/Images/logosticker.png"
+            alt="Company Logo"
+            className="preview-logo"
+          />
+          <div className="preview-company-info">
+            <h2>CHAWLA BROKER</h2>
+            <p>Propritor Naresh Kumar Chawla</p>
+            <p>Contact No: 0333731300</p>
+            <p>Email: nareshchawla7300@gmail.com</p>
+            <p>Address: Site Area Hyderabad</p>
+          </div>
+        </div>
+
+        <div className="preview-invoice-title">
+          <h1>INVOICE</h1>
+          <p className="invoice-number">{nextBillNo}</p>
+        </div>
+      </div>
+
+      {/* Invoice Details */}
+      <div className="preview-details">
+        <div className="preview-bill-to">
+          <h3>Bill To:</h3>
+          <div className="client-info">
+            <p className="client-name">
+              {clients.find(c => c.id === parseInt(clientId))?.name || "N/A"}
+            </p>
+          </div>
+        </div>
+        <div className="preview-dates">
+          <p>
+            <strong>Invoice Date:</strong>{" "}
+            {invoiceDate.toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })}
+          </p>
+          <p>
+            <strong>Due Date:</strong>{" "}
+            {dueDate.toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })}
+          </p>
+        </div>
+      </div>
+
+      {/* Items Table */}
+      <div className="preview-items">
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Product/Service</th>
+              <th>Description</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, i) => {
+              const productName =
+                products.find(p => p.name === item.product || p.id === parseInt(item.product))?.name || item.product;
+
+              return (
+                <tr key={i}>
+                  <td>{item.type}</td>
+                  <td className="product-name">{productName}</td>
+                  <td className="description">{item.description}</td>
+                  <td className="quantity">{item.qty}</td>
+                  <td className="unit-price">${item.price.toFixed(2)}</td>
+                  <td className="item-total">
+                    ${(item.qty * item.price).toFixed(2)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Summary Section */}
+      <div className="preview-summary">
+        <div className="summary-row total-row">
+          <span className="summary-label">Total Amount:</span>
+          <span className="summary-value">${total.toFixed(2)}</span>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="preview-footer">
+        <div className="payment-terms">
+          <h4>Payment Terms:</h4>
+          <p>Payment is due within 7 days of invoice date.</p>
+        </div>
+        <div className="thank-you">
+          <p><strong>Thank you for your business!</strong></p>
+          <p>For any questions regarding this invoice, please contact us.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

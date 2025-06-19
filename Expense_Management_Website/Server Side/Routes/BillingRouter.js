@@ -40,84 +40,86 @@ router.get('/getBill/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 router.post('/addBill', async (req, res) => {
-  const { clientId, items, invoiceDate, dueDate, totalAmount } = req.body;
+  const { bill_no, client_id, invoice_date, due_date, total_amount, type, items } = req.body;
 
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
+  con.beginTransaction((err) => {
+    if (err) return res.status(500).json({ message: 'Transaction error', error: err });
 
-    // 1. Validate client exists
-    const [clientRows] = await conn.query(`SELECT id FROM clients WHERE id = ?`, [clientId]);
-    if (clientRows.length === 0) {
-      return res.status(400).json({ message: 'Client not found' });
-    }
+    const billQuery = `
+      INSERT INTO bills (bill_no, client_id, invoice_date, due_date, total_amount, type)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
 
-    // 2. Insert into bills table
-    const [billResult] = await conn.query(
-      `INSERT INTO bills (client_id, invoice_date, due_date, total_amount, type) VALUES (?, ?, ?, ?, ?)`,
-      [clientId, invoiceDate, dueDate, totalAmount, 'Credit']
-    );
-    const billId = billResult.insertId;
-
-    // 3. Insert bill items
-    for (const item of items) {
-      const [productRows] = await conn.query(`SELECT id FROM products WHERE name = ?`, [item.product]);
-      if (productRows.length === 0) {
-        await conn.rollback();
-        return res.status(400).json({ message: `Product not found: ${item.product}` });
+    con.query(billQuery, [bill_no, client_id, invoice_date, due_date, total_amount, type], (err, result) => {
+      if (err) {
+        return con.rollback(() => {
+          res.status(500).json({ message: 'Failed to insert bill', error: err });
+        });
       }
-      const productId = productRows[0].id;
 
-      await conn.query(
-        `INSERT INTO bill_items (bill_id, product_id, description, qty, price, type) VALUES (?, ?, ?, ?, ?, ?)`,
-        [billId, productId, item.description, item.qty, item.price, item.type]
-      );
-    }
+      const billId = result.insertId;
 
-    await conn.commit();
-    res.status(201).json({ message: 'Bill and items added successfully', billId });
-  } catch (error) {
-    await conn.rollback();
-    console.error('Error saving bill:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  } finally {
-    conn.release();
-  }
-});
-router.get('/nextBillNo', async (req, res) => {
-  try {
-    const conn = await pool.getConnection();
+      // Get product ID from name
+      const itemPromises = items.map(item => {
+        return new Promise((resolve, reject) => {
+          const getProductIdQuery = 'SELECT id FROM products WHERE name = ? LIMIT 1';
+          con.query(getProductIdQuery, [item.product_name], (err, result) => {
+            if (err || result.length === 0) return reject(err || 'Product not found');
+            const productId = result[0].id;
 
-    // Get all bill IDs sorted ascending
-    const [rows] = await conn.query(`SELECT id FROM bills ORDER BY id ASC`);
+            const itemInsertQuery = `
+              INSERT INTO bill_items (bill_id, product_id, description, qty, price, type)
+              VALUES (?, ?, ?, ?, ?, ?)
+            `;
+            con.query(itemInsertQuery, [billId, productId, item.description, item.qty, item.price, item.type], (err) => {
+              if (err) return reject(err);
+              resolve();
+            });
+          });
+        });
+      });
 
-    if (rows.length === 0) {
-      return res.json({ billNo: 'INV-2025-001' });
-    }
-
-    // Extract all existing IDs
-    const ids = rows.map(row => row.id);
-    const maxId = Math.max(...ids);
-
-    // Check if maxId exists in the table
-    const hasMax = ids.includes(maxId);
-
-    const nextId = hasMax ? maxId + 1 : maxId; // If max ID is deleted, reuse it
-
-    const nextBillNo = `INV-2025-${nextId.toString().padStart(3, '0')}`;
-    res.json({ billNo: nextBillNo });
-  } catch (error) {
-    console.error('Error fetching next bill number:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
+      Promise.all(itemPromises)
+        .then(() => {
+          con.commit((err) => {
+            if (err) {
+              return con.rollback(() => {
+                res.status(500).json({ message: 'Commit failed', error: err });
+              });
+            }
+            res.status(201).json({ message: 'Bill and items saved successfully!' });
+          });
+        })
+        .catch((err) => {
+          con.rollback(() => {
+            res.status(500).json({ message: 'Failed to save items', error: err });
+          });
+        });
+    });
+  });
 });
 
 
+router.get('/nextBillNo', (req, res) => {
+  const query = `SELECT bill_no FROM bills ORDER BY id DESC LIMIT 1`;
 
+  con.query(query, (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error retrieving latest bill number', error: err });
+    }
 
+    let nextBillNo = 1;
 
+    if (result.length > 0) {
+      const lastBillNo = parseInt(result[0].bill_no);
+      nextBillNo = isNaN(lastBillNo) ? 1 : lastBillNo + 1;
+    }
 
+    res.json({ nextBillNo });
+  });
+});
 
 
 

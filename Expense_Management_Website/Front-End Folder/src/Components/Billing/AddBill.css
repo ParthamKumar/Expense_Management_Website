@@ -92,7 +92,8 @@
 
 .bill-no span {
   color: #1e40af;
-  font-weight: 700;
+  font-weight: 1000;
+  padding-left: 85px;
 }
 
 .date-row {
@@ -454,9 +455,9 @@
 }
 
 .invoice-number {
-  margin: 4px 0 0 0;
-  font-size: 16px;
-  font-weight: 600;
+    margin: 9px 60px 0 0;
+    font-size: 25px;
+    font-weight: 800;
   color: #374151;
 }
 
@@ -724,6 +725,36 @@
     max-width: 280px;
   }
 }
+/*  */
+.bill-no {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 16px;
+  margin: 10px;
+  font-family: Arial, sans-serif;
+}
+
+.bill-no label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.bill-no input[type="text"] {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.bill-no input[type="text"]:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+/*  */
 
 @media (max-width: 768px) {
   .bill-container {
