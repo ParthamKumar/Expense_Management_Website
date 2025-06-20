@@ -14,6 +14,7 @@ const AddBill = () => {
   const [nextBillNo ,setNextBillNo] = useState('')
 
 
+
   useEffect(() => {
     const fetchClients = axios.get("http://localhost:3000/accounts/getClients");
     const fetchProducts = axios.get(
@@ -43,15 +44,15 @@ const AddBill = () => {
     {
       product: "",
       description: "",
-      qty: 0,
-      price: 0,
-      type: "Debit",
+      qty: "",
+      price: "",
+      type: "Credit",
     },
     {
       product: "",
       description: "",
-      qty: 0,
-      price: 0,
+      qty: "",
+      price: "",
       type: "Credit",
     },
   ]);
@@ -64,8 +65,8 @@ const AddBill = () => {
     const newItem = {
       product: "",
       description: "",
-      qty: 1,
-      price: 0,
+      qty: "",
+      price: "",
       type: items.length === 0 ? "Debit" : "Credit",
     };
     setItems([...items, newItem]);
@@ -78,11 +79,17 @@ const AddBill = () => {
   };
 
   const updateItem = (index, key, value) => {
-    const updated = [...items];
-    updated[index][key] =
-      key === "qty" || key === "price" ? parseInt(value) || 0 : value;
-    setItems(updated);
-  };
+  const updated = [...items];
+  updated[index][key] = value;
+
+  if (key === "qty" || key === "price") {
+    const qty = parseFloat(updated[index].qty) || 0;
+    const price = parseFloat(updated[index].price) || 0;
+    updated[index].total = (qty * price).toFixed(2);
+  }
+
+  setItems(updated);
+};
 
   const subtotal = items.reduce((sum, item) => sum + item.qty * item.price, 0);
   const total = subtotal;
@@ -93,46 +100,46 @@ const handleSave = () => {
     client_id: parseInt(clientId),
     invoice_date: invoiceDate ? invoiceDate.toISOString().split("T")[0] : null,
     due_date: dueDate ? dueDate.toISOString().split("T")[0] : null,
-    total_amount: total,
+    total_amount: parseFloat(total),
     type: items.length > 0 ? items[0].type : "Debit",
     items: items.map(item => ({
       product_name: item.product, // You'll match this to ID on backend
       description: item.description,
-      qty: item.qty,
-      price: item.price,
+      qty: parseFloat(item.qty),
+      price:parseFloat( item.price),
       type: item.type
     }))
   };
   console.log('Data',billData)
 
-  // axios.post("http://localhost:3000/billing/addBill", billData)
-  //   .then((res) => {
-  //     alert("Bill and items saved successfully!");
-  //    // ✅ Reset all fields
-  //     setBillNo('');
-  //     setClientId('');
-  //     setInvoiceDate(new Date());
-  //     setDueDate(new Date());
-  //     setItems([
-  //       {
-  //         product: "",
-  //         description: "",
-  //         qty: 0,
-  //         price: 0,
-  //         type: "Debit",
-  //       },
-  //       {
-  //         product: "",
-  //         description: "",
-  //         qty: 0,
-  //         price: 0,
-  //         type: "Credit",
-  //       },
-  //     ]);
-  //   })
-  //   .catch((err) => {
-  //     console.error("Error saving bill:", err);
-  //   });
+  axios.post("http://localhost:3000/billing/addBill", billData)
+    .then((res) => {
+      alert("Bill and items saved successfully!");
+     // ✅ Reset all fields
+      setBillNo('');
+      setClientId('');
+      setInvoiceDate(new Date());
+      setDueDate(new Date());
+      setItems([
+        {
+          product: "",
+          description: "",
+          qty: 0,
+          price: 0,
+          type: "Debit",
+        },
+        {
+          product: "",
+          description: "",
+          qty: 0,
+          price: 0,
+          type: "Credit",
+        },
+      ]);
+    })
+    .catch((err) => {
+      console.error("Error saving bill:", err);
+    });
 };
 
   return (
@@ -272,6 +279,7 @@ const handleSave = () => {
                   <td>
                     <input
                       type="number"
+                      step="any"
                       value={item.qty}
                       onChange={(e) => updateItem(index, "qty", e.target.value)}
                     />
@@ -279,6 +287,7 @@ const handleSave = () => {
                   <td>
                     <input
                       type="number"
+                      step="any"
                       value={item.price}
                       onChange={(e) =>
                         updateItem(index, "price", e.target.value)
@@ -403,11 +412,13 @@ const handleSave = () => {
                   <td>{item.type}</td>
                   <td className="product-name">{productName}</td>
                   <td className="description">{item.description}</td>
-                  <td className="quantity">{item.qty}</td>
-                  <td className="unit-price">${item.price.toFixed(2)}</td>
-                  <td className="item-total">
-                    ${(item.qty * item.price).toFixed(2)}
-                  </td>
+<td className="quantity">{item.qty || 0}</td>
+                  <td className="unit-price">
+  ${parseFloat(item.price || 0).toFixed(2)}
+</td>
+<td className="item-total">
+  ${(parseFloat(item.qty || 0) * parseFloat(item.price || 0)).toFixed(2)}
+</td>
                 </tr>
               );
             })}
