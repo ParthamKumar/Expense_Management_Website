@@ -18,6 +18,7 @@ const ProductDetails = () => {
   const [description, setDescription] = useState('');
   const [quantity, setQuantity] = useState('');
   const [rate, setRate] = useState('');
+  const [transactionType, setTransactionType] = useState('all');
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -46,25 +47,25 @@ const ProductDetails = () => {
     return null;
   };
 
- useEffect(() => {
-  const filteredTxns = transactions.filter((tx) => {
-    const txDate = new Date(tx.date);
-    const start = startDate ? new Date(startDate.setHours(0, 0, 0, 0)) : null;
-    const end = endDate ? new Date(endDate.setHours(23, 59, 59, 999)) : null;
+  useEffect(() => {
+    const filteredTxns = transactions.filter((tx) => {
+      const txDate = new Date(tx.date);
+      const start = startDate ? new Date(startDate.setHours(0, 0, 0, 0)) : null;
+      const end = endDate ? new Date(endDate.setHours(23, 59, 59, 999)) : null;
 
-    return (
-      (!start || txDate >= start) &&
-      (!end || txDate <= end) &&
-      (!partyName || tx.partyName.toLowerCase().includes(partyName.toLowerCase())) &&
-      (!description || (tx.party_description || '').toLowerCase().includes(description.toLowerCase())) &&
-      (!quantity || String(tx.quantity).includes(quantity)) &&
-      (!rate || String(tx.rate).includes(rate))
-    );
-  });
+      return (
+        (!start || txDate >= start) &&
+        (!end || txDate <= end) &&
+        (!partyName || tx.partyName.toLowerCase().includes(partyName.toLowerCase())) &&
+        (!description || (tx.description || '').toLowerCase().includes(description.toLowerCase())) &&
+        (!quantity || String(tx.quantity).includes(quantity)) &&
+        (!rate || String(tx.rate).includes(rate)) &&
+        (transactionType === 'all' || tx.transaction_type === transactionType)
+      );
+    });
 
-  setFiltered(filteredTxns); // ✅ Just update filtered list, don't touch selected
-}, [startDate, endDate, partyName, description, quantity, rate, transactions]);
-
+    setFiltered(filteredTxns);
+  }, [startDate, endDate, partyName, description, quantity, rate, transactionType, transactions]);
 
   const clearFilters = () => {
     setStartDate(null);
@@ -73,6 +74,7 @@ const ProductDetails = () => {
     setDescription('');
     setQuantity('');
     setRate('');
+    setTransactionType('all');
   };
 
   const handleCheckboxChange = (tx) => {
@@ -95,20 +97,26 @@ const ProductDetails = () => {
 
   const isAllFilteredSelected = filtered.length > 0 && filtered.every(tx => selected.includes(tx));
 
-  const totalQuantity = selected.reduce((sum, tx) => sum + Number(tx.quantity || 0), 0);
-  const totalAmount = selected.reduce((sum, tx) => sum + Number(tx.buying_amount || 0), 0);
+  const buySummary = selected.filter(tx => tx.transaction_type === 'buy').reduce((sum, tx) => ({
+    quantity: sum.quantity + Number(tx.quantity || 0),
+    amount: sum.amount + Number(tx.total_amount || 0)
+  }), { quantity: 0, amount: 0 });
+
+  const sellSummary = selected.filter(tx => tx.transaction_type === 'sell').reduce((sum, tx) => ({
+    quantity: sum.quantity + Number(tx.quantity || 0),
+    amount: sum.amount + Number(tx.total_amount || 0)
+  }), { quantity: 0, amount: 0 });
 
   return (
     <div className="product-details-container">
-      <h2>Buy Transactions for {transactions[0]?.name}</h2>
+      <h2>Buy/Sell Transactions for {transactions[0]?.product_name}</h2>
 
       <div className="search-fields">
         <DatePicker
           selected={startDate}
           onChange={(date) => setStartDate(date)}
           onChangeRaw={(e) => {
-            const raw = e.target.value;
-            const parsed = parseTypedDate(raw);
+            const parsed = parseTypedDate(e.target.value);
             if (parsed) setStartDate(parsed);
           }}
           placeholderText="Start Date"
@@ -121,8 +129,7 @@ const ProductDetails = () => {
           selected={endDate}
           onChange={(date) => setEndDate(date)}
           onChangeRaw={(e) => {
-            const raw = e.target.value;
-            const parsed = parseTypedDate(raw);
+            const parsed = parseTypedDate(e.target.value);
             if (parsed) setEndDate(parsed);
           }}
           placeholderText="End Date"
@@ -131,30 +138,15 @@ const ProductDetails = () => {
           showYearDropdown
           dropdownMode="select"
         />
-        <input
-          type="text"
-          placeholder="Party Name"
-          value={partyName}
-          onChange={(e) => setPartyName(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Quantity"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Rate"
-          value={rate}
-          onChange={(e) => setRate(e.target.value)}
-        />
+        <input type="text" placeholder="Party Name" value={partyName} onChange={(e) => setPartyName(e.target.value)} />
+        <input type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+        <input type="text" placeholder="Quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+        <input type="text" placeholder="Rate" value={rate} onChange={(e) => setRate(e.target.value)} />
+        <select value={transactionType} onChange={(e) => setTransactionType(e.target.value)}>
+          <option value="all">All</option>
+          <option value="buy">Buy</option>
+          <option value="sell">Sell</option>
+        </select>
         <button onClick={clearFilters}>Clear Filters</button>
       </div>
 
@@ -162,19 +154,12 @@ const ProductDetails = () => {
         <div className="summary-table">
           <table>
             <thead>
-              <tr>
-                <th colSpan="2">Summary (Selected Transactions)</th>
-              </tr>
+              <tr><th colSpan="3">Summary (Selected Transactions)</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Total Quantity</td>
-                <td>{totalQuantity}  (40Kg)</td>
-              </tr>
-              <tr>
-                <td>Total Amount</td>
-                <td>₹{totalAmount.toLocaleString()}</td>
-              </tr>
+              <tr><td>Type</td><td>Total Quantity</td><td>Total Amount</td></tr>
+              <tr><td>Buy</td><td>{buySummary.quantity}</td><td>₹{buySummary.amount.toLocaleString()}</td></tr>
+              <tr><td>Sell</td><td>{sellSummary.quantity}</td><td>₹{sellSummary.amount.toLocaleString()}</td></tr>
             </tbody>
           </table>
         </div>
@@ -186,53 +171,54 @@ const ProductDetails = () => {
         <p>No transactions match the search criteria.</p>
       ) : (
         <div className="transactions-table">
-          <table>
-            <thead>
-              <tr>
-                
-                <th>Date</th>
-                <th>Party Name</th>
-                <th>Description</th>
-                <th>Quantity</th>
-                <th>Rate</th>
-                <th>Unit</th>
-                <th>Total Amount</th>
-                <th>
-                  <input
-                    type="checkbox"
-                    checked={isAllFilteredSelected}
-                    onChange={handleSelectAllToggle}
-                  /> Select
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((tx, index) => (
-                <tr key={index}>
-                  
-                  <td>{new Date(tx.date).toLocaleDateString('en-GB', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                  })}</td>
-                  <td>{tx.partyName}</td>
-                  <td>{tx.party_description}</td>
-                  <td>{tx.quantity}</td>
-                  <td>₹{tx.rate}</td>
-                  <td>{tx.unit}</td>
-                  <td>₹{tx.buying_amount.toLocaleString()}</td>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={isChecked(tx)}
-                      onChange={() => handleCheckboxChange(tx)}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+  <div className="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Party</th>
+          <th>Description</th>
+          <th>Bill No</th>
+          <th>Qty</th>
+          <th>Rate</th>
+          <th>Unit</th>
+          <th>Total</th>
+          <th>
+            <input
+              type="checkbox"
+              checked={isAllFilteredSelected}
+              onChange={handleSelectAllToggle}
+            /> Select
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {filtered.map((tx, index) => (
+          <tr key={index} className={tx.transaction_type === 'buy' ? 'buy-row' : 'sell-row'}>
+            <td>{new Date(tx.date).toLocaleDateString('en-GB')}</td>
+            <td>{tx.transaction_type}</td>
+            <td>{tx.partyName}</td>
+            <td>{tx.description || 'N/A'}</td>
+            <td>{tx.bill_no || 'N/A'}</td>
+            <td>{tx.quantity}</td>
+            <td>₹{tx.rate}</td>
+            <td>{tx.unit}</td>
+            <td>₹{Number(tx.total_amount).toLocaleString()}</td>
+            <td>
+              <input
+                type="checkbox"
+                checked={isChecked(tx)}
+                onChange={() => handleCheckboxChange(tx)}
+              />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
       )}
     </div>
   );

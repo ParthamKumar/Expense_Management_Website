@@ -53,7 +53,7 @@
 }
 
 .summary-table {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
@@ -193,7 +193,7 @@
   width: 140px;
   text-align: right;
   font-weight: 600;
-  color: #0ecf00;
+  color: #000000;
 }
 
 .transactions-table th:nth-child(8),
@@ -268,3 +268,83 @@
     width: 80px;
   }
 }
+
+.transactions-table {
+  flex: 1;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 60vh; /* Controls vertical scroll height */
+}
+
+.table-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  height: 100%;
+  width: 100%;
+}
+
+/* Optional: style scrollbars */
+.table-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.table-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+.table-scroll::-webkit-scrollbar-track {
+  background: #f7fafc;
+}
+
+/* Table layout */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px; /* Ensures horizontal scrolling on small screens */
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  color: white;
+  z-index: 2;
+}
+
+thead th {
+  padding: 12px;
+  font-weight: 600;
+  text-align: left;
+  font-size: 0.95rem;
+  border-bottom: 1px solid #ccc;
+}
+
+tbody td {
+  padding: 12px;
+  font-size: 0.95rem;
+  color: #4a5568;
+  border-bottom: 1px solid #eee;
+}
+
+/* Row color indicators */
+.buy-row td {
+  background-color: #e7f9ee;
+  color: #087f23;
+  font-weight: 500;
+}
+
+.sell-row td {
+  background-color: #fde8e8;
+  color: #c62828;
+  font-weight: 500;
+}
+
+/* Hover effect */
+tbody tr:hover td {
+  background-color: #f0f8ff;
+}
+
