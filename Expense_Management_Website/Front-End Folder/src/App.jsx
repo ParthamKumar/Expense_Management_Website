@@ -31,6 +31,8 @@ import BuySellForm from './Components/BuySell/BuySellForm'
 import Billing from './Components/Billing/Billing'
 import AddBill from './Components/Billing/AddBill'
 
+import BillCards from './Components/Billing/BillCards'
+
 
 function App() {
   return (
@@ -67,6 +69,8 @@ function App() {
 
         <Route path='/dashboard/billing' element={<Billing />}></Route>
         <Route path='/dashboard/billing/addbill' element={<AddBill />}></Route>
+        <Route path='/dashboard/billing/allbills' element={<BillCards />}></Route>
+
 
 
 

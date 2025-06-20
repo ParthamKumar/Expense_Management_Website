@@ -1,0 +1,62 @@
+.bill-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+  justify-content: center;
+}
+
+.bill-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 700px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.bill-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.logo {
+  height: 80px;
+}
+
+.invoice-title {
+  text-align: right;
+}
+
+.bill-details {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #ccc;
+  padding-top: 10px;
+}
+
+.bill-items {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bill-items th, .bill-items td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.bill-summary {
+  text-align: right;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.bill-footer {
+  border-top: 1px dashed #aaa;
+  padding-top: 10px;
+  font-size: 0.9rem;
+}

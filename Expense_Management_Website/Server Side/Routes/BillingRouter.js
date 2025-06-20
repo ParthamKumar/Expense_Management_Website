@@ -121,6 +121,176 @@ router.get('/nextBillNo', (req, res) => {
   });
 });
 
+router.get('/allBills', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        b.id AS bill_id,
+        b.bill_no,
+        b.client_id,
+        c.name AS client_name,
+        b.invoice_date,
+        b.due_date,
+        b.total_amount,
+        b.type AS bill_type,
+        bi.id AS item_id,
+        bi.product_id,
+        p.name AS product_name,
+        bi.description,
+        bi.qty,
+        bi.price,
+        bi.type AS item_type
+      FROM 
+        bills b
+      JOIN 
+        clients c ON b.client_id = c.id
+      LEFT JOIN 
+        bill_items bi ON bi.bill_id = b.id
+      LEFT JOIN 
+        products p ON bi.product_id = p.id
+      ORDER BY 
+        b.id, bi.id
+    `);
+
+    // Group rows by bill_id
+    const bills = {};
+    for (const row of rows) {
+      const {
+        bill_id,
+        bill_no,
+        client_id,
+        client_name,
+        invoice_date,
+        due_date,
+        total_amount,
+        bill_type,
+        item_id,
+        product_id,
+        product_name,
+        description,
+        qty,
+        price,
+        item_type,
+      } = row;
+
+      if (!bills[bill_id]) {
+        bills[bill_id] = {
+          bill_id,
+          bill_no,
+          client_id,
+          client_name,
+          invoice_date,
+          due_date,
+          total_amount,
+          bill_type,
+          items: [],
+        };
+      }
+
+      if (item_id) {
+        bills[bill_id].items.push({
+          item_id,
+          product_id,
+          product_name,
+          description,
+          qty,
+          price,
+          item_type,
+        });
+      }
+    }
+
+    const result = Object.values(bills);
+    res.json(result);
+  } catch (err) {
+    console.error('Error fetching all bills with items:', err);
+    res.status(500).json({ message: 'Server error', error: err });
+  }
+});
+
+router.get('/bill/:billNo', async (req, res) => {
+  const { billNo } = req.params;
+
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        b.id AS bill_id,
+        b.bill_no,
+        b.client_id,
+        c.name AS client_name,
+        b.invoice_date,
+        b.due_date,
+        b.total_amount,
+        b.type AS bill_type,
+        bi.id AS item_id,
+        bi.product_id,
+        p.name AS product_name,
+        bi.description,
+        bi.qty,
+        bi.price,
+        bi.type AS item_type
+      FROM 
+        bills b
+      JOIN 
+        clients c ON b.client_id = c.id
+      LEFT JOIN 
+        bill_items bi ON bi.bill_id = b.id
+      LEFT JOIN 
+        products p ON bi.product_id = p.id
+      WHERE 
+        b.bill_no = ?
+      ORDER BY 
+        b.id, bi.id
+    `, [billNo]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Bill not found' });
+    }
+
+    // Build a single bill object
+    const {
+      bill_id,
+      client_id,
+      client_name,
+      invoice_date,
+      due_date,
+      total_amount,
+      bill_type,
+    } = rows[0];
+
+    const bill = {
+      bill_id,
+      bill_no: billNo,
+      client_id,
+      client_name,
+      invoice_date,
+      due_date,
+      total_amount,
+      bill_type,
+      items: [],
+    };
+
+    for (const row of rows) {
+      if (row.item_id) {
+        bill.items.push({
+          item_id: row.item_id,
+          product_id: row.product_id,
+          product_name: row.product_name,
+          description: row.description,
+          qty: row.qty,
+          price: row.price,
+          item_type: row.item_type,
+        });
+      }
+    }
+
+    res.json(bill);
+  } catch (err) {
+    console.error('Error fetching bill with items:', err);
+    res.status(500).json({ message: 'Server error', error: err });
+  }
+});
+
 
 
 export default router;
