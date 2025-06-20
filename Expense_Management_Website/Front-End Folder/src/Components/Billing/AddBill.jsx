@@ -94,53 +94,81 @@ const AddBill = () => {
   const subtotal = items.reduce((sum, item) => sum + item.qty * item.price, 0);
   const total = subtotal;
 
-const handleSave = () => {
-  const billData = {
-    bill_no: billNo,
-    client_id: parseInt(clientId),
-    invoice_date: invoiceDate ? invoiceDate.toISOString().split("T")[0] : null,
-    due_date: dueDate ? dueDate.toISOString().split("T")[0] : null,
-    total_amount: parseFloat(total),
-    type: items.length > 0 ? items[0].type : "Debit",
-    items: items.map(item => ({
-      product_name: item.product, // You'll match this to ID on backend
-      description: item.description,
-      qty: parseFloat(item.qty),
-      price:parseFloat( item.price),
-      type: item.type
-    }))
-  };
-  console.log('Data',billData)
+const handleSave = async () => {
+  try {
+    const parsedClientId = parseInt(clientId);
+    const formattedInvoiceDate = invoiceDate?.toISOString().split("T")[0];
+    const formattedDueDate = dueDate?.toISOString().split("T")[0];
+    const parsedTotal = parseFloat(total);
 
-  axios.post("http://localhost:3000/billing/addBill", billData)
-    .then((res) => {
-      alert("Bill and items saved successfully!");
-     // ✅ Reset all fields
-      setBillNo('');
-      setClientId('');
-      setInvoiceDate(new Date());
-      setDueDate(new Date());
-      setItems([
-        {
-          product: "",
-          description: "",
-          qty: 0,
-          price: 0,
-          type: "Debit",
-        },
-        {
-          product: "",
-          description: "",
-          qty: 0,
-          price: 0,
-          type: "Credit",
-        },
-      ]);
-    })
-    .catch((err) => {
-      console.error("Error saving bill:", err);
+    const billData = {
+      bill_no: nextBillNo,
+      client_id: parsedClientId,
+      invoice_date: formattedInvoiceDate,
+      due_date: formattedDueDate,
+      total_amount: parsedTotal,
+      type: items.length > 0 ? items[0].type : "Debit",
+      items: items.map(item => ({
+        product_name: item.product,
+        description: item.description,
+        qty: parseFloat(item.qty),
+        price: parseFloat(item.price),
+        type: item.type
+      }))
+    };
+
+    const transactionData = {
+      client_id: parsedClientId,
+      name: clients.find(c => c.id === parsedClientId)?.name || "",
+      date: formattedInvoiceDate,
+      description: `Invoice #${nextBillNo}`,
+      transaction_type: 'debit',
+      amount: parsedTotal,
+      buySellTransactionId: null,
+      bill_no: nextBillNo
+    };
+
+    const buySellTransactionData = items.map(item => ({
+      transaction_type: 'sell',
+      date: formattedInvoiceDate,
+      party_id: parsedClientId,
+      party_type: 'debit',
+      party_description: item.description || '',
+      product_id: products.find(p => p.name === item.product)?.id || null,
+      quantity: parseFloat(item.qty) || 0,
+      rate: parseFloat(item.price) || 0,
+      unit: ' ',
+      buying_amount: 0,
+      contributors_sum: 0,
+      total_amount: parseFloat(item.qty * item.price).toFixed(2),
+      buyer_id: parsedClientId,
+      buyer_description: `Bill #${billNo}`,
+      buyer_type: item.type.toLowerCase(),
+      bill_no: nextBillNo
+    }));
+
+    console.log(" Bill data", billData)
+    console.log(" buy sell",buySellTransactionData)
+    console.log(" transacton",transactionData)
+
+    await axios.post("http://localhost:3000/billing/saveCompleteBill", {
+      billData,
+      transactionData,
+      buySellTransactionData
     });
+
+    alert("All data saved successfully!");
+
+    // Reset form here...
+
+  } catch (err) {
+    console.error("❌ Error saving complete data:", err.response?.data || err.message);
+    alert("Failed to save bill. Everything was rolled back.");
+  }
 };
+
+
+
 
   return (
     <div className="bill-container">

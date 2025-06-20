@@ -65,15 +65,18 @@ const BillCards = () => {
     setForm({ ...form, items: updatedItems });
   };
 
-  const handleDeleteBill = async (billId) => {
-    if (!window.confirm("Are you sure you want to delete this bill?")) return;
-    try {
-      await axios.delete(`http://localhost:3000/billing/deleteBill/${billId}`);
-      setBills(bills.filter(b => b.bill_id !== billId));
-    } catch (err) {
-      console.error("Error deleting bill:", err);
-    }
-  };
+  const handleDeleteBill = async (billNo) => {
+  if (!window.confirm("Are you sure you want to delete this bill and all related records?")) return;
+  try {
+    await axios.delete(`http://localhost:3000/billing/deletebill/${billNo}`);
+    setBills(prev => prev.filter(b => b.bill_no !== billNo));
+    alert("Bill and all related records deleted successfully!");
+  } catch (err) {
+    console.error("Error deleting bill:", err);
+    alert("Failed to delete bill. Please check console for more info.");
+  }
+};
+
 
   const handleSave = async () => {
     try {
@@ -237,7 +240,7 @@ const BillCards = () => {
                 <Trash2
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteBill(bill.bill_id);
+                    handleDeleteBill(bill.bill_no);
                   }}
                   color="red"
                   size={18}
