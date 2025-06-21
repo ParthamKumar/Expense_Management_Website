@@ -418,5 +418,212 @@ router.get('/gettransactions', (req, res) => {
     });
 });
 
+// adding data into two tables Transaction and Buysell
+// router.post('/addbuyselltransaction', async (req, res) => {
+//   const conn = await pool.getConnection();
+//   try {
+//     const {
+//       client_id,
+//       name,
+//       date,
+//       description,
+//       transaction_type,
+//       transactionType, // buy/sell
+//       amount,
+//       product_id,
+//       quantity,
+//       rate
+//     } = req.body;
+
+//     await conn.beginTransaction();
+
+//     let buySellId = null;
+
+//     if (product_id && quantity && rate && transactionType) {
+//       const buying_amount = parseFloat(quantity) * parseFloat(rate);
+//       const total_amount = buying_amount;
+
+//       const [buySellResult] = await conn.query(`
+//         INSERT INTO buyselltransactions (
+//           transaction_type, date, party_id, party_type, party_description,
+//           product_id, quantity, rate, unit, buying_amount,
+//           contributors_sum, total_amount,
+//           buyer_id, buyer_description, buyer_type
+//         )
+//         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+//       `, [
+//         transactionType, // 'buy' or 'sell'
+//         date.split('T')[0],
+//         client_id,
+//         transaction_type === 'credit' ? 'debit' : 'credit',
+//         description,
+//         product_id,
+//         parseFloat(quantity),
+//         parseFloat(rate),
+//         'unit', // Replace if dynamic
+//         buying_amount,
+//         0.00,
+//         total_amount,
+//         client_id,
+//         description,
+//         transaction_type
+//       ]);
+
+//       buySellId = buySellResult.insertId;
+//     }
+
+//     // Insert into transaction
+//     await conn.query(`
+//       INSERT INTO transactions (
+//         client_id, name, date, description,
+//         transaction_type, amount, buySellTransactionId
+//       )
+//       VALUES (?, ?, ?, ?, ?, ?, ?)
+//     `, [
+//       client_id,
+//       name,
+//       date,
+//       description,
+//       transaction_type,
+//       parseFloat(amount),
+//       buySellId
+//     ]);
+
+//     await conn.commit();
+//     res.status(201).json({ message: 'Transaction with Buy/Sell details added successfully' });
+//   } catch (err) {
+//     await conn.rollback();
+//     console.error('Transaction failed:', err);
+//     res.status(500).json({ error: 'Failed to add transaction', details: err.message });
+//   } finally {
+//     conn.release();
+//   }
+// });
+
+router.post('/addbuyselltransaction', async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    const {
+      client_id,
+      name,
+      date,
+      description,
+      transaction_type,
+      transactionType, // buy/sell
+      amount,
+      product_id,
+      quantity,
+      rate
+    } = req.body;
+
+    await conn.beginTransaction();
+
+    let buySellId = null;
+
+    if (product_id && quantity && rate && transactionType) {
+      const buying_amount = parseFloat(quantity) * parseFloat(rate);
+      const total_amount = buying_amount;
+
+      const [buySellResult] = await conn.query(`
+        INSERT INTO buyselltransactions (
+          transaction_type, date, party_id, party_type, party_description,
+          product_id, quantity, rate, unit, buying_amount,
+          contributors_sum, total_amount,
+          buyer_id, buyer_description, buyer_type
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        transactionType, // 'buy' or 'sell'
+        date.split('T')[0],
+        client_id,
+        transaction_type === 'credit' ? 'debit' : 'credit',
+        description,
+        product_id,
+        parseFloat(quantity),
+        parseFloat(rate),
+        'unit', // Replace with dynamic value if needed
+        buying_amount,
+        0.00,
+        total_amount,
+        client_id,
+        description,
+        transaction_type
+      ]);
+
+      buySellId = buySellResult.insertId;
+    }
+
+    // Insert into transactions with both linkage fields
+    await conn.query(`
+      INSERT INTO transactions (
+        client_id, name, date, description,
+        transaction_type, amount,
+        buySellTransactionId, buySellCombined
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      client_id,
+      name,
+      date,
+      description,
+      transaction_type,
+      parseFloat(amount),
+      buySellId,
+      buySellId // <-- also insert into new column
+    ]);
+
+    await conn.commit();
+    res.status(201).json({ message: 'Transaction with Buy/Sell details added successfully' });
+  } catch (err) {
+    await conn.rollback();
+    console.error('Transaction failed:', err);
+    res.status(500).json({ error: 'Failed to add transaction', details: err.message });
+  } finally {
+    conn.release();
+  }
+});
+
+router.delete('/deletebuyselltransaction/:id', async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    const transactionId = req.params.id;
+
+    await conn.beginTransaction();
+
+    // Fetch the transaction to get buySellTransactionId or buySellCombined
+    const [rows] = await conn.query(`
+      SELECT buySellTransactionId, buySellCombined 
+      FROM transactions 
+      WHERE transaction_id = ?
+    `, [transactionId]);
+
+    if (rows.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    const { buySellTransactionId, buySellCombined } = rows[0];
+
+    // Delete the transaction
+    await conn.query(`DELETE FROM transactions WHERE transaction_id = ?`, [transactionId]);
+
+    // Determine the buysell ID to delete
+    const buySellId = buySellTransactionId || buySellCombined;
+
+    // If linked, delete the corresponding buysell transaction
+    if (buySellId) {
+      await conn.query(`DELETE FROM buyselltransactions WHERE id = ?`, [buySellId]);
+    }
+
+    await conn.commit();
+    res.status(200).json({ message: 'Transaction and related Buy/Sell deleted successfully' });
+  } catch (err) {
+    await conn.rollback();
+    console.error('Delete transaction failed:', err);
+    res.status(500).json({ error: 'Failed to delete transaction', details: err.message });
+  } finally {
+    conn.release();
+  }
+});
 
 export default router;

@@ -28,20 +28,20 @@ const TransactionDetails = () => {
     }, [id]);
 
     // Function to handle deleting the transaction
-    const handleDelete = async () => {
-        const confirmDelete = window.confirm('Are you sure you want to delete this transaction?');
-        if (confirmDelete) {
-            try {
-                await axios.delete(`http://localhost:3000/transactions/deletetransaction/${id}`);
-                alert('Transaction deleted successfully!');
-                navigate('/dashboard/transactions'); // Redirect to transactions list
-            } catch (error) {
-                console.error('Error deleting transaction:', error);
-                alert('Failed to delete transaction');
-            }
+const handleDelete = async () => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this transaction?');
+    if (confirmDelete) {
+        try {
+            // Use the correct endpoint to delete both transaction and its linked buysell
+            await axios.delete(`http://localhost:3000/transactions/deletebuyselltransaction/${id}`);
+            alert('Transaction deleted successfully!');
+            navigate('/dashboard/transactions');
+        } catch (error) {
+            console.error('Error deleting transaction:', error);
+            alert('Failed to delete transaction');
         }
-    };
-
+    }
+};
     // Function to handle editing the transaction
     const handleEdit = () => {
         navigate(`/dashboard/transactions/edittransaction/${id}`); // Navigate to edit page

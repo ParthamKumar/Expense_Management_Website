@@ -204,7 +204,7 @@ const ProductDetails = () => {
             <td>{tx.quantity}</td>
             <td>₹{tx.rate}</td>
             <td>{tx.unit}</td>
-            <td>₹{Number(tx.total_amount).toLocaleString()}</td>
+<td>₹{Math.round(Number(tx.quantity) * Number(tx.rate)).toLocaleString()}</td>
             <td>
               <input
                 type="checkbox"

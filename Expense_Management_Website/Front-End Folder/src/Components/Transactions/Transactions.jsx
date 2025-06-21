@@ -37,7 +37,7 @@ const Transactions = () => {
 
   // Apply filters when filters or transactions change
 useEffect(() => {
-  let filtered = transactions.filter(t => !t.buySellTransactionId && !t.source); // ✅ Exclude linked buySellTransaction and Source
+let filtered = transactions.filter(t => (!t.buySellTransactionId && !t.bill_no) || t.buySellCombined);
 
   if (searchTerm) {
     filtered = filtered.filter((t) =>
